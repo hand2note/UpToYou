@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UpToYou.Backend.FSharp\UpToYou.Backend.FSharp.fsproj" />
+    <ProjectReference Include="..\UpToYou.Core\UpToYou.Core.csproj" />
+  </ItemGroup>
+
+</Project>

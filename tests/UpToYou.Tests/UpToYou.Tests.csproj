@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+    <LangVersion>8.0</LangVersion>
+    <NullableContextOptions>enable</NullableContextOptions>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="_testdata\**" />
+    <EmbeddedResource Remove="_testdata\**" />
+    <None Remove="_testdata\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="AutoFixture" Version="4.9.0" />
+    <PackageReference Include="AutoFixture.NUnit3" Version="4.9.0" />
+    <PackageReference Include="CompareNETObjects" Version="4.59.0" />
+    <PackageReference Include="Minimod.PrettyPrint" Version="1.1.0" />
+    <PackageReference Include="nunit" Version="3.11.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\UpToYou.Backend.FSharp\UpToYou.Backend.FSharp.fsproj" />
+    <ProjectReference Include="..\..\src\UpToYou.Backend.Runner\UpToYou.Backend.Runner.csproj" />
+    <ProjectReference Include="..\..\src\UpToYou.Backend\UpToYou.Backend.csproj" />
+    <ProjectReference Include="..\..\src\UpToYou.Client.Runner\UpToYou.Client.Runner.csproj" />
+    <ProjectReference Include="..\..\src\UpToYou.Client\UpToYou.Client.csproj" />
+    <ProjectReference Include="..\..\src\UpToYou.Core\UpToYou.Core.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Include="_testdata\.updates.specs" />
+    <None Include="_testdata\PokerStars.updates.specs" />
+    <None Include="_testdata\Simple.updates.specs" />
+  </ItemGroup>
+
+</Project>

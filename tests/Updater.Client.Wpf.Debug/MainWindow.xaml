@@ -1,0 +1,12 @@
+﻿<Window x:Class="Updater.Client.Wpf.Debug.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpf1="clr-namespace:UpToYou.Client.Wpf;assembly=UpToYou.Client.Wpf"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="600" Width="800">
+    <Grid>
+        <wpf1:UpdatesView/>
+    </Grid>
+</Window>

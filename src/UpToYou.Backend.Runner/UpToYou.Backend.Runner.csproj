@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>UpToYou</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon />
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UpToYou.Backend.FSharp\UpToYou.Backend.FSharp.fsproj" />
+    <ProjectReference Include="..\UpToYou.Backend\UpToYou.Backend.csproj" />
+    <ProjectReference Include="..\UpToYou.Client\UpToYou.Client.csproj" />
+    <ProjectReference Include="..\UpToYou.Core\UpToYou.Core.csproj" />
+  </ItemGroup>
+
+</Project>
