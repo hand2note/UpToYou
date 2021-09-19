@@ -13,8 +13,6 @@ public class UpdateNotes {
     private readonly string _updateNotesFile =  "Hand2Note.UpdateNotes.en.md".ToAbsoluteFilePath(TestData.TestDataDirectory);
     private readonly string _updateNotesFileRu =  "Hand2Note.UpdateNotes.ru.md".ToAbsoluteFilePath(TestData.TestDataDirectory);
 
-    
-
     [TestCase("Hand2Note.UpdateNotes.en.md")]
     [TestCase("Hand2Note.UpdateNotes.ru.md")]
     [TestCase("WinningPokerNetwork.UpdateNotes.en.md")]
@@ -30,7 +28,7 @@ public class UpdateNotes {
     [TestCase("MyApp", "en", ExpectedResult = "MyApp.UpdateNotes.en.md")]
     [TestCase("", "en", ExpectedResult = "UpdateNotes.en.md")]
     public string GetUpdateNotesFileName(string packageName, string locale) =>
-        UpdateNotesModule.GetUpdateNotesFileName(packageName, locale);
+        UpdateNotesHelper.GetUpdateNotesFileName(packageName, locale);
 
     [TestCase("UpdateNotes.md", null, null)]
     [TestCase("UpdateNotes.en.md", null, "en")]

@@ -15,17 +15,17 @@ IFilesHostOptions {
 
 public static class FileHostOptionsEx {
 
-    public static AzureBlobStorageProperties 
+    public static AzureBlobStorageOptions 
     AzureBlobStorageProperties(this IFilesHostOptions options) =>
-        new AzureBlobStorageProperties(options.AzureRootContainer, options.AzureConnectionString);
+        new AzureBlobStorageOptions(options.AzureRootContainer, options.AzureConnectionString);
 
-    public static IFilesHost 
+    public static IHost 
     GetFilesHost(this IFilesHostOptions options) {
-        if (options.FilesHostType == null || options.FilesHostType == nameof(AzureBlobStorage))
-            return new AzureBlobStorage(new AzureBlobStorageProperties(options.AzureRootContainer,  options.AzureConnectionString));
+        if (options.FilesHostType == null || options.FilesHostType == nameof(AzureBlobStorageHost))
+            return new AzureBlobStorageHost(new AzureBlobStorageOptions(options.AzureRootContainer,  options.AzureConnectionString));
             
-        if (options.FilesHostType == nameof(LocalFilesHost))
-            return new LocalFilesHost(options.LocalHostRootPath ?? throw new InvalidOperationException($"{nameof(PushUpdateOptions.LocalHostRootPath)} should be specified."));
+        if (options.FilesHostType == nameof(LocalHost))
+            return new LocalHost(options.LocalHostRootPath ?? throw new InvalidOperationException($"{nameof(PushUpdateOptions.LocalHostRootPath)} should be specified."));
 
         throw new InvalidOperationException($"{options.FilesHostType} is an undefined type of host");
     }

@@ -29,32 +29,31 @@ example:
 */
 
 
-public class UpdateNotes {
-    public UpdateNotes(string? packageName, Version version, string notes) {
+public class 
+UpdateNotes {
+    public UpdateNotes(string packageName, Version version, string notes) {
         PackageName = packageName;
         Version = version;
         Notes = notes;
     }
-    public string? PackageName { get; }
+    public string PackageName { get; }
     public Version Version { get; }
     public string Notes { get; }
 
     public bool 
-    Hits(string? packageName, Version version) =>
+    Hits(string packageName, Version version) =>
         (string.IsNullOrWhiteSpace(packageName) ? string.IsNullOrWhiteSpace(PackageName) : PackageName == packageName ) &&
         Version == version;
 }
 
-public static class UpdateNotesModule {
+public static class 
+UpdateNotesHelper {
 
     public static string PackageNotesAnchor = "[//]: #";
 
-    public static string GetUpdateNotesFileName(string? packageName, string? locale) {
-        var res = string.IsNullOrWhiteSpace(packageName) ? "UpdateNotes" : $"{packageName}.UpdateNotes";
-        if (string.IsNullOrWhiteSpace(locale))
-            return $"{res}.md";
-        return $"{res}.{locale}.md";
-    }
+    public static string 
+    GetUpdateNotesFileName(string packageName, string locale) =>
+        $"{packageName}.UpdateNotes.{locale}.md";
 
     public static (string? fileName, string? locale)
     ParseUpdateNotesParsFromFile(this string file) {
@@ -79,7 +78,7 @@ public static class UpdateNotesModule {
 
     public static string? 
     FindNotes(this IEnumerable<(Version version, string notes)> updateNotes, Version version) => 
-        updateNotes.TryFind(x => x.version == version, out var res) ? res.notes : null;
+        updateNotes.TryGet(x => x.version == version, out var res) ? res.notes : null;
 
     private static (Version version, string notes) 
     ParsePackageUpdateNotes(this string text) {

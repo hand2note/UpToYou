@@ -12,8 +12,8 @@ public class AzureEnvironment {
     public string? AzureRootContainer { get; }
     public string? AzureConnectionString { get; }
 
-    public AzureBlobStorageProperties ToAzureBlobStorageProperties() =>
-        new AzureBlobStorageProperties(AzureRootContainer, AzureConnectionString);
+    public AzureBlobStorageOptions ToAzureBlobStorageProperties() =>
+        new AzureBlobStorageOptions(AzureRootContainer, AzureConnectionString);
 }
 
 public static class EnvironmentModule {

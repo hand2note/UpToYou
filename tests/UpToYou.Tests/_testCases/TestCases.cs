@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging.Abstractions;
 using UpToYou.Backend;
 using UpToYou.Backend.Runner;
 using UpToYou.Core;
@@ -67,14 +68,14 @@ internal static class TestCasesHelper {
     BuildProjection(this IProjectionTestCase test, UpdaterTestContext ctx) {
         test.HostState?.Build(ctx);
         var package = test.PackageTestCase.BuildPackage(ctx).UploadToHost(ctx);
-        var projectionBuildCtx = new ProjectionBuildContext(
+        var projectionBuildCtx = new ProjectionBuilder(
             sourceDirectory:package.srcDir,
             outputDirectory:ctx.ProjectionFilesDirectory,
             package:package.package,
             projectionSpecs:test.GetProjectionSpecs(),
-            hostContext:ctx.Host,
+            host:ctx.Host,
             hostRootUrl:ctx.HostRootUrl, 
-            log:new Logger());
+            log: NullLogger.Instance);
 
         return projectionBuildCtx.BuildProjection();
     }

@@ -31,10 +31,6 @@ public class UpdateSpecsTest {
         Assert.IsNotNull(spec.AutoUpdateFrom.FirstOrDefault(x => x == "1.0.4.5".ParseVersion()));
         Assert.IsTrue(spec.FindCustomBoolProperty("InstallOnDemand"));
 
-        var dependency = spec.Dependencies.First();
-        Assert.AreEqual("Hand2Note", dependency.PackageName);
-        Assert.AreEqual("3.2.6.25".ParseVersion(), dependency.MinVersion);
-
         spec = actual.FindUpdateSpec("1.0.4.5".ParseVersion());
         Assert.AreEqual(50, spec.UpdateRing);
         Assert.IsTrue(spec.IsAuto);
@@ -52,48 +48,6 @@ public class UpdateSpecsTest {
         Assert.IsNull(actual.DefaultSpec.IsRequired);
 
     }
-
-    [Test]
-    public void UpdatesManifestDeserializationBug() {
-        var manifest = new UpdatesManifest(new List<Update>() {
-            new Update(new PackageMetadata(null, "Android", "1.0.0.0".ParseVersion(), DateTime.Now, null), new UpdatePolicy(
-                isAuto:true, 
-                isRequired:false,
-                updateRing:new UpdateRing(0),
-                isBeta:false,
-                isLazy:true,
-                null)),
-            new Update(new PackageMetadata(null, "Hand2Note", "1.0.0.0".ParseVersion(), DateTime.Now.AddDays(-1), null), new UpdatePolicy(
-                isAuto:false, 
-                isRequired:true,
-                updateRing:new UpdateRing(0),
-                isBeta:false,
-                isLazy:false,
-                null))
-        });
-
-        var deserialized = manifest.ProtoSerializeToBytes().DeserializeProto<UpdatesManifest>();
-
-        Assert.IsFalse(deserialized.Updates.FirstOrDefault(x => x.PackageMetadata.Name == "Android").UpdatePolicy.IsRequired);
-    }
-
-    //[Test]
-    //public void Test() {
-
-    //    var updatesManifest = "c:/_junk/.updates.proto.xz".ReadAllFileBytes().Decompress().DeserializeProto<UpdatesManifest>();
-
-    //    var options = new PushUpdateOptions(
-    //        sourceDirectory:"C:/h2nexternal.binaries",
-    //        updatesSpecsFile:"C:/h2nExternal.Binaries/deploy/AndroidEmulator/.updates.specs",
-    //        forceIfEmptyNotes:true,
-    //        packageSpecsFile:"C:/h2nExternal.Binaries/deploy/AndroidEmulator/AndroidEmulator.x64.package.specs",
-    //        azureRootContainer:"uptoyou",
-    //        azureConnectionString:"DefaultEndpointsProtocol=https;AccountName=h2n;AccountKey=jzzncAXQsNVh7A7rHngOefRCKgiyIoGhizo8/rZy58cshUAnuT7fygVLNWToNycFTLT3EiMTBKHoXYo4dXrV2A==;EndpointSuffix=core.windows.net");
-
-        
-    //        options.PushUpdate();
-        
-    //}
 
 }
 }

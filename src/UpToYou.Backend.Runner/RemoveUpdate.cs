@@ -7,55 +7,54 @@ using UpToYou.Core;
 namespace UpToYou.Backend.Runner {
 [Verb("RemovePackage")]
 public class RemovePackageOptions {
-    public RemovePackageOptions(string packageVersion, string packageName) {
-        PackageVersion = packageVersion;
-        PackageName = packageName;
-    }
 
     [Value(0), Option(Required = true)]
     public string PackageVersion { get; }
 
-    [Value(1), Option]
-    public string? PackageName { get; }
+    [Value(1), Option(Required = true)]
+    public string PackageName { get; }
+    public RemovePackageOptions(string packageVersion, string packageName) {
+        PackageVersion = packageVersion;
+        PackageName = packageName;
+    }
 }
 
-public static class RemovePackageModule {
-    public static void RemovePackage(this RemovePackageOptions options) {
+public static class 
+RemovePackageModule {
+    public static void 
+    RemovePackage(this RemovePackageOptions options) {
 
         var azureEnvironment = EnvironmentModule.GetAzureEnvironment();
-        var log = new ConsoleLogger();
-        var host = new PackageHostContext(
-            filesHost:new AzureBlobStorage(azureEnvironment.ToAzureBlobStorageProperties()),
-            log:new ConsoleLogger(),
-            progressContext:null);
+        var logger = new ConsoleLogger();
+        var host = new AzureBlobStorageHost(azureEnvironment.ToAzureBlobStorageProperties());
 
         var packages = host.DownloadAllPackages().ToList();
-        log.LogInformation($"Downloaded {packages.Count} packages");
+        logger.LogInformation($"Downloaded {packages.Count} packages");
 
         var packageToRemove = packages.FirstOrDefault(x => x.Metadata.IsSamePackage(options.PackageVersion.ParseVersion(), options.PackageName));
         if (packageToRemove== null)
             throw new InvalidOperationException($"Package {options.PackageName} {options.PackageVersion} not found on the host.");
 
-        log.LogInformation($"Package to remove found: id={packageToRemove.Id}, name={packageToRemove.Metadata.Name}, version={packageToRemove.Version}, dateBuilt={packageToRemove.Metadata.DateBuilt}");
+        logger.LogInformation($"Package to remove found: id={packageToRemove.Id}, name={packageToRemove.Metadata.Name}, version={packageToRemove.Version}, dateBuilt={packageToRemove.Metadata.DatePublished}");
 
         host.RemovePackage(packageToRemove.Id);
-        log.LogInformation($"Package {packageToRemove.Metadata.Name} {packageToRemove.Version} built on {packageToRemove.Metadata.DateBuilt} has been removed from the host");
+        logger.LogInformation($"Package {packageToRemove.Metadata.Name} {packageToRemove.Version} built on {packageToRemove.Metadata.DatePublished} has been removed from the host");
 
         var updateManifest  = host.DownloadUpdatesManifestIfExists();
         if (updateManifest == null) {
-            log.LogWarning("Update manifest doesn't exists");
+            logger.LogWarning("Update manifest doesn't exists");
             return;
         }
 
-        var update = updateManifest.FindUpdate(options.PackageVersion.ParseVersion(), options.PackageName);
-        if (update == null) {
-            log.LogWarning($"Update with version {options.PackageVersion.ParseVersion()} and name {(options.PackageName??string.Empty).Quoted()} not found in the update manifest");
+        if (!updateManifest.TryGetUpdate(options.PackageVersion.ParseVersion(), options.PackageName, out var update)) {
+            logger.LogWarning($"Update with version {options.PackageVersion.ParseVersion()} and name {(options.PackageName??string.Empty).Quoted()} not found in the update manifest");
             return;
         }
+        
         updateManifest.Remove(update);
 
         updateManifest.Upload(host);
-        log.LogInformation("Update manifest has been successfully updated");
+        logger.LogInformation("Update manifest has been successfully updated");
 
     }
 }

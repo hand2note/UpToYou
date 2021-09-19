@@ -28,7 +28,7 @@ public interface IHasRelativePath {
 }
 
 public static class
-RelativePathEx {
+RelativePathHelper {
 
     public static string
     Copy(this RelativePath path, string sourceDirectory, string outDirectory) =>
@@ -67,7 +67,7 @@ RelativePathEx {
 
     internal static T
     GetByPath<T>(this IEnumerable<T> items, RelativePath path) where T : IHasRelativePath {
-        if (items.TryFind(x => x.Path.Value == path.Value, out var res))
+        if (items.TryGet(x => x.Path.Value == path.Value, out var res))
             return res;
         throw new InvalidOperationException($"Item with RelativePath={path.Value.Quoted()}");
     }
@@ -75,7 +75,7 @@ RelativePathEx {
     public static bool IsParentTo(this RelativePath path, RelativePath other) => other.Value.StartsWith(path.Value);
 
     internal static IEnumerable<RelativePath>
-    EnumerateDirectoryRelativeFiles(this string directory, bool recursive = true) => directory.EnumerateAllDirectoryFiles(recursive).Select(x => x.GetPathRelativeTo(directory));
+    EnumerateDirectoryRelativeFiles(this string directory, bool recursive = true) => directory.GetAllDirectoryFiles(recursive).Select(x => x.GetPathRelativeTo(directory));
 
 }
 

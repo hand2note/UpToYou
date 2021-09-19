@@ -21,13 +21,13 @@ public class AzureBlobStorageTests {
     TestAzureConnectionsString => 
         @"AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;";
 
-    public static AzureBlobStorageProperties
-    AzureStorageTestProperties => new AzureBlobStorageProperties(
+    public static AzureBlobStorageOptions
+    AzureStorageTestProperties => new AzureBlobStorageOptions(
         rootContainer: "uptoyou",
         connectionString: TestAzureConnectionsString);
 
-    public static AzureBlobStorage
-    AzureBlobStorageTest => new AzureBlobStorage(AzureStorageTestProperties);
+    public static AzureBlobStorageHost
+    AzureBlobStorageTest => new AzureBlobStorageHost(AzureStorageTestProperties);
 
     [OneTimeSetUp]
     public static void
@@ -48,28 +48,18 @@ public class AzureBlobStorageTests {
     UploadFileTest() {
         var data = new byte[] {1,2,3,4,5 };
         var file = "test" + Guid.NewGuid();
-        AzureBlobStorageTest.UploadData(null, file.ToRelativePath(), data);
-        var downloaded = AzureBlobStorageTest.DownloadData(null, file.ToRelativePath());
+        AzureBlobStorageTest.UploadBytes(file.ToRelativePath(), data);
+        var downloaded = AzureBlobStorageTest.DownloadBytes(file.ToRelativePath());
         CollectionAssert.AreEquivalent(data, downloaded);
     }
 
     [Test, AutoData]
     public static void
-    DownloadFile(byte[] data) {
-        var file = ("test" + Guid.NewGuid()).ToRelativePath();
-        AzureBlobStorageTest.UploadData(null, file, data);
-        AzureBlobStorageTest.DownloadFile(null, file, file);
-        CollectionAssert.AreEquivalent(data, File.ReadAllBytes(file));
-    }
-
-
-    [Test, AutoData]
-    public static void
     RemoveFile(byte[] data) {
         var file = ("test" + Guid.NewGuid()).ToRelativePath();
-        AzureBlobStorageTest.UploadData(null, file, data);
+        AzureBlobStorageTest.UploadBytes( file, data);
         AzureBlobStorageTest.Remove(file);
-        Assert.Throws<RequestFailedException>(() => AzureBlobStorageTest.DownloadData(null, file));
+        Assert.Throws<RequestFailedException>(() => AzureBlobStorageTest.DownloadBytes(file));
     }
 
 
