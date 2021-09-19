@@ -9,7 +9,7 @@ namespace UpToYou.Backend.Runner
             var azureEnvironment = EnvironmentModule.GetAzureEnvironment();
             var host = new PackageHostContext(
                 filesHost:new AzureBlobStorage(azureEnvironment.ToAzureBlobStorageProperties()),
-                log:new Logger(),
+                log:new ConsoleLogger(),
                 progressContext:null);
 
             var updateManifest  = host.DownloadUpdatesManifestIfExists();

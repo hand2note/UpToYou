@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ProtoBuf;
 
 namespace UpToYou.Core {
@@ -16,10 +17,10 @@ IFilesHostClient {
 public class
 PackageHostClientContext {
     public IFilesHostClient FilesHost { get; }
-    public IUpdaterLogger? Log { get; }
+    public ILogger? Log { get; }
     public ProgressContext? ProgressContext { get; }
 
-    public PackageHostClientContext(IFilesHostClient filesHost, IUpdaterLogger? log, ProgressContext? progressContext) {
+    public PackageHostClientContext(IFilesHostClient filesHost, ILogger? log, ProgressContext? progressContext) {
         FilesHost = filesHost;
         Log = log;
         ProgressContext = progressContext;
@@ -166,7 +167,7 @@ public static class PackageHost {
 
 
     internal static T? 
-    TryDeserialize<T>(this byte[] bytes, string? file = null, IUpdaterLogger? log = null) where T: class {
+    TryDeserialize<T>(this byte[] bytes, string? file = null, ILogger? log = null) where T: class {
         try {
             return bytes.DeserializeProto<T>();
         }

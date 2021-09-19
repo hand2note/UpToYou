@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using CommandLine;
+using Microsoft.Extensions.Logging;
 using UpToYou.Core;
 
 namespace UpToYou.Backend.Runner {
@@ -22,23 +23,23 @@ public static class RemovePackageModule {
     public static void RemovePackage(this RemovePackageOptions options) {
 
         var azureEnvironment = EnvironmentModule.GetAzureEnvironment();
-        var log = new Logger();
+        var log = new ConsoleLogger();
         var host = new PackageHostContext(
             filesHost:new AzureBlobStorage(azureEnvironment.ToAzureBlobStorageProperties()),
-            log:new Logger(),
+            log:new ConsoleLogger(),
             progressContext:null);
 
         var packages = host.DownloadAllPackages().ToList();
-        log.LogInfo($"Downloaded {packages.Count} packages");
+        log.LogInformation($"Downloaded {packages.Count} packages");
 
         var packageToRemove = packages.FirstOrDefault(x => x.Metadata.IsSamePackage(options.PackageVersion.ParseVersion(), options.PackageName));
         if (packageToRemove== null)
             throw new InvalidOperationException($"Package {options.PackageName} {options.PackageVersion} not found on the host.");
 
-        log.LogInfo($"Package to remove found: id={packageToRemove.Id}, name={packageToRemove.Metadata.Name}, version={packageToRemove.Version}, dateBuilt={packageToRemove.Metadata.DateBuilt}");
+        log.LogInformation($"Package to remove found: id={packageToRemove.Id}, name={packageToRemove.Metadata.Name}, version={packageToRemove.Version}, dateBuilt={packageToRemove.Metadata.DateBuilt}");
 
         host.RemovePackage(packageToRemove.Id);
-        log.LogInfo($"Package {packageToRemove.Metadata.Name} {packageToRemove.Version} built on {packageToRemove.Metadata.DateBuilt} has been removed from the host");
+        log.LogInformation($"Package {packageToRemove.Metadata.Name} {packageToRemove.Version} built on {packageToRemove.Metadata.DateBuilt} has been removed from the host");
 
         var updateManifest  = host.DownloadUpdatesManifestIfExists();
         if (updateManifest == null) {
@@ -54,7 +55,7 @@ public static class RemovePackageModule {
         updateManifest.Remove(update);
 
         updateManifest.Upload(host);
-        log.LogInfo("Update manifest has been successfully updated");
+        log.LogInformation("Update manifest has been successfully updated");
 
     }
 }

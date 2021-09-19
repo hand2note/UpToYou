@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using UpToYou.Core;
 
 namespace UpToYou.Client {
 
 public class UpdateContext {
     public PackageHostClientContext Host { get; }
-    public IUpdaterLogger? Log { get; }
+    public ILogger? Log { get; }
     public string ProgramDirectory { get; }
     public string UpdateFilesDirectory { get; }
     public IUpdateRingPolicy UpdateRingPolicy { get; }
 
-    public UpdateContext(PackageHostClientContext host, IUpdaterLogger? log, string programDirectory, string updateFilesDirectory, IUpdateRingPolicy updateRingPolicy) =>
+    public UpdateContext(PackageHostClientContext host, ILogger? log, string programDirectory, string updateFilesDirectory, IUpdateRingPolicy updateRingPolicy) =>
         (Host, Log, ProgramDirectory,UpdateFilesDirectory , UpdateRingPolicy) = (host, log, programDirectory, updateFilesDirectory, updateRingPolicy);
 }
 
@@ -30,7 +31,7 @@ public static class CheckForUpdatesModule {
     private static IEnumerable<(string packageName, UpdatesByVersion updates)> 
     NotifyObserver(this IEnumerable<(string packageName, UpdatesByVersion updates)> entries, UpdateContext ctx) {
         foreach (var @in in entries) {
-            ctx.Log?.LogInfo($"Fetched {@in.updates.Count} updates of package {@in.packageName}");
+            ctx.Log?.LogInformation($"Fetched {@in.updates.Count} updates of package {@in.packageName}");
             yield return @in;
         }
     }

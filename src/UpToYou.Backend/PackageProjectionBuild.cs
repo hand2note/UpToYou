@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using UpToYou.Core;
 using UniqueId = UpToYou.Core.UniqueId;
 
@@ -23,9 +24,9 @@ ProjectionBuildContext {
     public PackageProjectionSpecs ProjectionSpecs{ get; }
     public PackageHostContext HostContext{ get; }
     public string HostRootUrl{ get; }
-    public IUpdaterLogger? Log { get; }
+    public ILogger? Log { get; }
 
-    public ProjectionBuildContext(string sourceDirectory, string outputDirectory, Package package, PackageProjectionSpecs projectionSpecs, PackageHostContext hostContext, string hostRootUrl, IUpdaterLogger? log) {
+    public ProjectionBuildContext(string sourceDirectory, string outputDirectory, Package package, PackageProjectionSpecs projectionSpecs, PackageHostContext hostContext, string hostRootUrl, ILogger? log) {
         SourceDirectory = sourceDirectory;
         OutputDirectory = outputDirectory;
         Package = package;
@@ -176,7 +177,7 @@ PackageProjectionBuild {
         if (ctx.Log != null && packageFrom != null) {
             var oldFile = packageFrom.FindFileById(@in.packageFileId);
             if (oldFile != null)
-                ctx.Log?.LogInfo($"Delta has been built for {oldFile.Path.Value.Quoted()} of size {deltaBytes.Length.BytesToMegabytes()} mb has been built from version {packageFrom.Version}");
+                ctx.Log?.LogInformation($"Delta has been built for {oldFile.Path.Value.Quoted()} of size {deltaBytes.Length.BytesToMegabytes()} mb has been built from version {packageFrom.Version}");
         }
 
         return (delta, deltaFile);
@@ -194,17 +195,17 @@ PackageProjectionBuild {
     private static HostedFile Log(this HostedFile hostedFile, ProjectionBuildContext ctx) {
         if (ctx.Log != null) {
             if (hostedFile.Content is PackageFileDeltasHostedFileContent deltasContent) {
-                ctx.Log.LogInfo($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {deltasContent.PackageFileDeltas.Count} deltas.");
+                ctx.Log.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {deltasContent.PackageFileDeltas.Count} deltas.");
                 ctx.Log.LogDebug(deltasContent.PackageFileDeltas.Aggregate(string.Empty, (s,x) => s + ctx.Package.GetFileById(x.PackageItemId).Path.Value + "\n"));
             }
             else if (hostedFile.Content is PackageItemsHostedFileContent itemsContent)
-                ctx.Log.LogInfo($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {itemsContent.PackageItems.Count} files.");
+                ctx.Log.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {itemsContent.PackageItems.Count} files.");
         }
         return hostedFile;
     }
 
     private static PackageProjection Log(this PackageProjection projection, ProjectionBuildContext ctx) {
-        ctx.Log?.LogInfo($"Projection {projection.PackageId.PackageIdToProjectionFileOnHost()} has been built with {projection.HostedFiles.Count} hosted files.");
+        ctx.Log?.LogInformation($"Projection {projection.PackageId.PackageIdToProjectionFileOnHost()} has been built with {projection.HostedFiles.Count} hosted files.");
         return projection;
     }
 }

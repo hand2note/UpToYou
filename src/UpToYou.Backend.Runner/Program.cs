@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using CommandLine;
-using UpdaterLogLevels = UpToYou.Core.UpdaterLogLevels;
+using Microsoft.Extensions.Logging;
 
 namespace UpToYou.Backend.Runner
 {
@@ -25,7 +25,7 @@ class Program {
             if (result.Tag == ParserResultType.NotParsed)
                 throw new InvalidOperationException($"Failed to parse command arguments");
         } catch(Exception exception) {
-            new Logger().LogException(UpdaterLogLevels.Fatal, "Failed to execute", exception);
+            new ConsoleLogger().LogException(LogLevel.Critical, "Failed to execute", exception);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using UpToYou.Core;
 using static UpToYou.Core.PackageHost;
 
@@ -10,7 +11,7 @@ public class
 PackageHostContext : PackageHostClientContext {
     public new IFilesHost FilesHost { get; }
 
-    public PackageHostContext(IFilesHost filesHost, IUpdaterLogger? log, ProgressContext? progressContext) 
+    public PackageHostContext(IFilesHost filesHost, ILogger? log, ProgressContext? progressContext) 
         : base( filesHost, log, progressContext) => FilesHost = filesHost;
 }
 

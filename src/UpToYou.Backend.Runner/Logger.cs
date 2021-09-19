@@ -1,30 +1,31 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using UpToYou.Core;
 
 namespace UpToYou.Backend.Runner {
 
-internal class Logger: IUpdaterLogger {
-    public void Log(UpdaterLogLevels level, string msg) {
+internal class ConsoleLogger: ILogger {
+    public void Log(LogLevel level, string msg) {
         switch(level) {
-            case UpdaterLogLevels.Debug:
+            case LogLevel.Debug:
                 Console.ForegroundColor = ConsoleColor.Gray;
                 break;
 
-            case UpdaterLogLevels.Trace:
+            case LogLevel.Trace:
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 break;
 
-            case UpdaterLogLevels.Info:
+            case LogLevel.Information:
                 Console.ForegroundColor = ConsoleColor.White;
                 break;
 
-            case UpdaterLogLevels.Warning:
+            case LogLevel.Warning:
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 break;
 
-            case UpdaterLogLevels.Error:
-            case UpdaterLogLevels.Fatal:
+            case LogLevel.Error:
+            case LogLevel.Critical:
                 Console.ForegroundColor = ConsoleColor.Red;
                 break;
 
@@ -38,7 +39,7 @@ internal class Logger: IUpdaterLogger {
 
     }
 
-    public void LogException(UpdaterLogLevels level, string msg, Exception ex) {
+    public void LogException(LogLevel level, string msg, Exception ex) {
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine(msg);
         Console.WriteLine(ex.ToString());
@@ -47,11 +48,24 @@ internal class Logger: IUpdaterLogger {
         Console.ForegroundColor = ConsoleColor.White;
     }
 
-    public void LogObject(UpdaterLogLevels level, string name, object obj) {
+    public void LogObject(LogLevel level, string name, object obj) {
         Console.WriteLine(name + ":");
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.WriteLine(JsonConvert.SerializeObject(obj, Formatting.Indented));
         Console.ForegroundColor = ConsoleColor.White;
+    }
+
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception, string> formatter) {
+        if (exception != null) 
+            LogException(logLevel, state as string, exception);
+        else 
+            Log(logLevel, state?.ToString()!);
+    }
+
+    public bool IsEnabled(LogLevel logLevel) => true;
+
+    public IDisposable BeginScope<TState>(TState state) {
+        throw new NotImplementedException();
     }
 }
 

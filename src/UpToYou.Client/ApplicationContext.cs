@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UpToYou.Core;
 
 namespace UpToYou.Client {
@@ -22,7 +23,7 @@ ApplicationUpdateContext {
     public string BackupDirectory { get; }
     public UpdatesManifest UpdatesManifest { get; }
     public IFilesHostClient FilesHost { get; }
-    public IUpdaterLogger? Log { get; }
+    public ILogger? Log { get; }
     public IUpdateRingPolicy UpdateRingPolicy { get; }
     private IApplicationShutDown _applicationShutDown { get; }
     private Func<Update, bool> _updatesFilter { get; }
@@ -49,7 +50,7 @@ ApplicationUpdateContext {
         string? programDirectory = null, 
         string? updateDirectory = null, 
         string? backupDirectory = null, 
-        IUpdaterLogger? log = null, 
+        ILogger? log = null, 
         Func<Update, bool>? updatesFilter = null) 
     {
         UpdatesManifest = updatesManifest;
@@ -91,7 +92,7 @@ ApplicationUpdateContext {
         string? programDirectory = null, 
         string? updateDirectory = null, 
         string? backupDirectory = null, 
-        IUpdaterLogger? log = null, 
+        ILogger? log = null, 
         Func<Update, bool>? updatesFilter = null) {
 
         new PackageHostClientContext(filesHost, log, null).TryDownloadUpdatesManifest(out var updateManifest);

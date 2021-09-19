@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UpToYou.Core;
 
 namespace UpToYou.Client {
@@ -16,9 +17,9 @@ InstallUpdateContext {
     public bool Backup => !string.IsNullOrWhiteSpace(BackupDirectory);
     public string BackupDirectory { get; }
     public CancellationToken? CancellationToken { get; }
-    public IUpdaterLogger? Log { get; }
+    public ILogger? Log { get; }
 
-    public InstallUpdateContext(string updateFilesDirectory, string programDirectory, string? backupDirectory, IUpdaterLogger? log, CancellationToken? cancellationToken = null) {
+    public InstallUpdateContext(string updateFilesDirectory, string programDirectory, string? backupDirectory, ILogger? log, CancellationToken? cancellationToken = null) {
         UpdateFilesDirectory = updateFilesDirectory;
         ProgramDirectory = programDirectory;
         Log = log;
@@ -35,16 +36,16 @@ DownloadAndInstallContext {
     public CancellationToken? CancellationToken { get; }
     public PackageHostClientContext Host { get; }
     public IProgressOperationObserver? ProgressObserver { get; }
-    public IUpdaterLogger? Log { get; }
+    public ILogger? Logger { get; }
 
-    public DownloadAndInstallContext(string updateFilesDirectory, string programDirectory, string backupDirectory, CancellationToken? cancellationToken, IUpdaterLogger? log, PackageHostClientContext host, IProgressOperationObserver? progressObserver) {
+    public DownloadAndInstallContext(string updateFilesDirectory, string programDirectory, string backupDirectory, CancellationToken? cancellationToken, ILogger? logger, PackageHostClientContext host, IProgressOperationObserver? progressObserver) {
         UpdateFilesDirectory = updateFilesDirectory;
         ProgramDirectory = programDirectory;
         BackupDirectory = backupDirectory;
         CancellationToken = cancellationToken;
         Host = host;
         ProgressObserver = progressObserver;
-        Log = log;
+        Logger = logger;
     }
 }
 
@@ -79,15 +80,15 @@ public static class InstallModule {
             if (!difference.IsDifferent())
                 throw new InvalidOperationException($"Package {package.Metadata.Version} is already installed");
 
-            if (ctx.Log != null)
+            if (ctx.Logger != null)
                 foreach (var differentFile in difference.DifferentFiles)
-                    ctx.Log.LogDebug($"{differentFile.PackageFile.Path} differs");
+                    ctx.Logger.LogDebug($"{differentFile.PackageFile.Path} differs");
 
             ctx.ProgressObserver?.OnOperationChanged(Resources.ClearingUpdateDirectoryDotted);
             ctx.UpdateFilesDirectory.ClearDirectoryIfExists();
 
             ctx.ProgressObserver?.OnOperationChanged(Resources.DownloadingUpdateFilesDotted, new Progress());
-            ctx.Log?.LogInfo($"Downloading update files for package {package}");
+            ctx.Logger?.LogInformation($"Downloading update files for package {package}");
             difference.DownloadUpdateFiles(new DownloadUpdateContext(
                 outputDirectory: ctx.UpdateFilesDirectory,
                 progressContext: ctx.Host.ProgressContext,
@@ -95,19 +96,19 @@ public static class InstallModule {
                 progressOperationObserver: ctx.ProgressObserver));
 
             ctx.ProgressObserver?.OnOperationChanged(Resources.InstallingUpdateDotted, null);
-            ctx.Log?.LogInfo("Installing update...");
+            ctx.Logger?.LogInformation("Installing update...");
             var remainingDifference = difference.InstallAccessibleFiles(new InstallUpdateContext(
                 updateFilesDirectory: ctx.UpdateFilesDirectory,
                 ctx.ProgramDirectory,
                 ctx.BackupDirectory,
-                ctx.Log));
+                ctx.Logger));
 
             return remainingDifference != null && remainingDifference.IsDifferent()
                 ? new InstallUpdateResult(isCompleted: false, isRunnerExecutionRequired: true)
                 : new InstallUpdateResult(isCompleted: true, isRunnerExecutionRequired: false);
         }
         catch (Exception ex) {
-            ctx.Log?.LogException(UpdaterLogLevels.Error, "Failed to download and install update", ex);
+            ctx.Logger?.LogError(ex, "Failed to download and install update");
             return new InstallUpdateResult(false, false, ex);
         }
     } 
@@ -132,10 +133,8 @@ public static class InstallModule {
         updaterExeDifference.UpdateFile(ctx, new Dictionary<string, string>(){{updaterExeDifference.PackageFile.FileHash, updateFile}});
     }
 
-    public static void VerifyInstallation(this Package package, string programDirectory) {
-        package.Files.Values.ForEach(x => x.Verify( x.Path.ToAbsolute(programDirectory)));
-       // package.Folders.ForEach(x => x.Verify(x.Path.ToAbsolute(programDirectory)));
-    }
+    public static void 
+    VerifyInstallation(this Package package, string programDirectory) => package.Files.Values.ForEach(x => x.Verify( x.Path.ToAbsolute(programDirectory)));
 
 
     internal static PackageDifference? 
@@ -149,7 +148,7 @@ public static class InstallModule {
                 fileDifference.UpdateFile(ctx, updateFilesCache);
             }
             catch (Exception ex) when (ex is AccessViolationException || ex is UnauthorizedAccessException) {
-                ctx.Log?.LogInfo($"File {fileDifference.PackageFile.Path.Value.Quoted()} is not accessible.");
+                ctx.Log?.LogInformation($"File {fileDifference.PackageFile.Path.Value.Quoted()} is not accessible.");
                 remainingDifferences.Add(fileDifference);
                 fileDifference.PrepareForRunner(ctx, updateFilesCache);
             }

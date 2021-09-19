@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using CommandLine;
+using Microsoft.Extensions.Logging;
 using UpToYou.Core;
 
 namespace UpToYou.Backend.Runner {
@@ -112,7 +113,7 @@ public static class PushUpdateModule {
         var workingDirectory = options.WorkingDirectory ?? Environment.CurrentDirectory.AppendPath(UniqueId.NewUniqueId());
         var packageDirectory = workingDirectory.AppendPath("package").CreateDirectory();
         var projectionDirectory= workingDirectory.AppendPath("projection").CreateDirectory();
-        var log = new Logger();
+        var log = new ConsoleLogger();
 
         //Build package
         log.LogDebug("Building package...");
@@ -127,12 +128,12 @@ public static class PushUpdateModule {
             customProperties:options.PackageCustomProperties?.ToCustomProperties());
 
         var (package, _) = buildPackageCtx.BuildPackage();
-        log.LogInfo($"Package {package.Metadata.Name} #{package.Version} has been successfully built!");
+        log.LogInformation($"Package {package.Metadata.Name} #{package.Version} has been successfully built!");
 
         //Retrieve host
         var host = new PackageHostContext(
             filesHost:options.GetFilesHost(),
-            log:new Logger(),
+            log:new ConsoleLogger(),
             progressContext:null);
         
         //Check existing packages
@@ -155,12 +156,12 @@ public static class PushUpdateModule {
                                            .ToSingleProjectionFileSpec().ToProjectionSpecs(),
                 hostContext: host,
                 options.LocalHostRootPath ?? options.AzureBlobStorageProperties().GetRootUrl(),
-                new Logger());
+                new ConsoleLogger());
 
             var projectionBuildResult = buildProjectionCtx.BuildProjection(allCachedPackages: allPackages);
-            log.LogInfo($"Package {package.Metadata.Name} #{package.Version} has been successfully published!");
+            log.LogInformation($"Package {package.Metadata.Name} #{package.Version} has been successfully published!");
 
-            log.LogInfo("Package projection has been successfully built!");
+            log.LogInformation("Package projection has been successfully built!");
 
             //Upload
             log.LogDebug("Uploading projection files to the host...");
@@ -171,7 +172,7 @@ public static class PushUpdateModule {
             projectionBuildResult.UploadAllProjectionFiles(host);
             package.UploadPackageManifest(host);
 
-            log.LogInfo("Projection files have been successfully uploaded!");
+            log.LogInformation("Projection files have been successfully uploaded!");
 
             //Removing existing same packages
             allPackages.Where(x => x.Id != package.Id && x.Metadata.IsSamePackage(package.Metadata))
@@ -233,13 +234,13 @@ public static class PushUpdateModule {
                 }
                 var result = updateNotesFile.ParseUpdateNotesParsFromFile();
                 updateNotesFile.ReadAllFileBytes().UploadUpdateNotesUtf8(package.Metadata.Name, result.locale, host.FilesHost);
-                log.LogInfo($"Uploaded update notes file {updateNotesFile.GetFileName()} for packageName={result.fileName??"any"}, locale={result.locale??"any"}");
+                log.LogInformation($"Uploaded update notes file {updateNotesFile.GetFileName()} for packageName={result.fileName??"any"}, locale={result.locale??"any"}");
             }
         }
         else 
             log.LogWarning($"No update notes files have been specified. Consider creating an update notes file with name {UpdateNotesModule.GetUpdateNotesFileName(package.Metadata.Name, null).Quoted()}.");
 
-        log.LogInfo("Updates manifest has been updated");
+        log.LogInformation("Updates manifest has been updated");
     }
 }
 
