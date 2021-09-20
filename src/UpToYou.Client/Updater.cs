@@ -52,16 +52,7 @@ UpdaterOptions {
 
 public class 
 InstallUpdateResult {
-    public InstallUpdateResult(bool isCompleted, bool isRunnerExecutionRequired, Exception? exception = null) {
-        IsCompleted = isCompleted;
-        IsRunnerExecutionRequired = isRunnerExecutionRequired;
-        Exception = exception;
-    }
-    public bool IsCompleted { get; }
-    public bool IsRunnerExecutionRequired { get; }
-    public bool IsApplicationShutDownRequired => IsRunnerExecutionRequired;
-    public Exception? Exception { get; }
-    public bool IsError => Exception != null;
-    public string? ErrorMessage => Exception?.Message;
+   public bool IsRestartRequired {get;}
+   public InstallUpdateResult(bool isRestartRequired) => IsRestartRequired = isRestartRequired;
 }
 }

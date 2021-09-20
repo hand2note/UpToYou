@@ -56,12 +56,12 @@ public static class PackageHostHelper {
             .AppendFileExtensions(ProjectionExtension, ProtoExtension, Compressing.DefaultCompressMethodFileExtension)
             .ToRelativePath();
 
-    public static UpdatesManifest
+    public static UpdateManifest
     DownloadUpdatesManifest(this IHostClient client) =>
         UpdateManifestPathOnHost
             .DownloadBytes(client)
             .Decompress()
-            .DeserializeProto<UpdatesManifest>();
+            .DeserializeProto<UpdateManifest>();
 
     public static List<UpdateNotes>
     DownloadUpdateNotes(this List<Update> updates, string locale, IHostClient host) =>

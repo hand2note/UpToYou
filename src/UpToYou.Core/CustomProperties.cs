@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace UpToYou.Core {
 public interface 
 IHasCustomProperties {
-    Dictionary<string, string>? CustomProperties { get; }
+    ImmutableDictionary<string, string> CustomProperties { get; }
 }
 
 public static class 
@@ -28,15 +29,9 @@ CustomProperties {
         return true;
     }
 
-    public static bool?
-    FindCustomBoolProperty(this IHasCustomProperties provider,string key) {
-        var value = provider.FindCustomProperty(key);
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        if (bool.TryParse(value, out var res))
-            return res;
-        return null;
+    public static bool
+    GetCustomBoolProperty(this IHasCustomProperties provider,string key) {
+        return provider.CustomProperties.TryGetValue(key, out var value) && value.Equals("true", StringComparison.OrdinalIgnoreCase);
     }
 
     public static int?

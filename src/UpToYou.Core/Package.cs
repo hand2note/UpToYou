@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using ProtoBuf;
@@ -72,19 +73,22 @@ PackageMetadata: IHasCustomProperties{
     [ProtoMember(3)] public Version Version { get; }
     [ProtoMember(4)] public DateTime DatePublished { get; }
     [ProtoMember(5)] public PackageFile VersionProviderFile { get; }
-    [ProtoMember(6)] public Dictionary<string, string>? CustomProperties { get; }
-    public PackageMetadata(string id, string name,  Version version, DateTime datePublished, PackageFile versionProviderFile, Dictionary<string, string>? customProperties = null) {
+    [ProtoMember(6)] public ImmutableDictionary<string, string> CustomProperties { get; }
+    public PackageMetadata(string id, string name, Version version, DateTime datePublished, PackageFile versionProviderFile, ImmutableDictionary<string, string> customProperties) {
         Id = id;
         Name = name;
+        Version = version;
         DatePublished = datePublished;
         VersionProviderFile = versionProviderFile;
         CustomProperties = customProperties;
-        Version = version;
     }
-    
+
     // ReSharper disable once UnusedMember.Global
     #pragma warning disable CS8618 // Non-nullable field is uninitialized.
-    protected PackageMetadata() => Name = string.Empty;
+    protected PackageMetadata() {
+        Name = string.Empty;
+        CustomProperties = ImmutableDictionary<string, string>.Empty;
+    }
     #pragma warning restore CS8618 // Non-nullable field is uninitialized.
 
     public bool 
@@ -99,6 +103,16 @@ PackageMetadata: IHasCustomProperties{
     public override string ToString() => $"{Name}, {Version}";
 }
 
+[ProtoContract]
+public class 
+UpdateManifest {
+    [ProtoMember(1)] public ImmutableList<PackageMetadata> PackagesByDate { get; }
+    public UpdateManifest(IList<PackageMetadata> updates) {
+        PackagesByDate = updates.OrderByDescending(x => x.DatePublished).ToImmutableList();
+    }
 
+    public IEnumerable<PackageMetadata> Packages => PackagesByDate;
+    protected UpdateManifest() => PackagesByDate = ImmutableList<PackageMetadata>.Empty;
+}
 
 }

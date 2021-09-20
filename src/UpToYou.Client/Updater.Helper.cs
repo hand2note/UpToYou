@@ -15,30 +15,65 @@ public static class UpdaterHelper {
     
 public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
 
-    public static void 
-    RunUpdater(string? updateFilesDirectory = null, string? backupDirectory = null) {
-        if (updateFilesDirectory == null)
-            updateFilesDirectory = Updater.DefaultUpdateFilesSubDirectory.ToAbsoluteFilePath(Environment.CurrentDirectory);
-        if (backupDirectory == null)
-            backupDirectory = Updater.DefaultBackupSubDirectory.ToAbsoluteFilePath(Environment.CurrentDirectory);
-        if (!updateFilesDirectory.EndsWith(UpdaterHelper.RunnerSourcesSubDirectory))
-            updateFilesDirectory = updateFilesDirectory.AppendPath(UpdaterHelper.RunnerSourcesSubDirectory);
-        var applicationStartupFile = Process.GetCurrentProcess().MainModule?.FileName;
-        var processesIdsToWaitExit = new int[]{ Process.GetCurrentProcess().Id};
-        Process.Start("UpToYou.Client.Runner.exe", $"{updateFilesDirectory.Quoted()} {backupDirectory.Quoted()} {string.Join(",", processesIdsToWaitExit.MapToList(x => x.ToString()))}  {applicationStartupFile.Quoted()}");
+    public static IEnumerable<PackageMetadata>
+    GetNewUpdates(this IEnumerable<PackageMetadata> packages, Updater updater) {
+        foreach(var (_, packageUpdates) in packages.GroupByPackageName()) {
+            if (!packageUpdates.TryGetLatestUpdate(out var latestUpdate))
+                continue;
+            if (!latestUpdate.IsInstalled(updater))
+                yield return latestUpdate;
+        }
     }
+    
+    public static InstallUpdateResult
+    DownloadAndInstall(this IEnumerable<PackageMetadata> updates, Updater updater) {
+        InstallUpdateResult? result = null;
+        foreach(var update in updates) {
+            var updateResult = update.DownloadAndInstall(updater);
+            if (result == null)
+                result = updateResult;
+            else 
+                result = result.Combine(updateResult);
+        }
+        if (result == null) throw new InvalidOperationException("Collection of updates is empty");
+        return result;
+    }
+    
+    public static InstallUpdateResult 
+    Combine(this InstallUpdateResult result, InstallUpdateResult other) =>
+        new InstallUpdateResult(isRestartRequired: result.IsRestartRequired || other.IsRestartRequired);
+
+    public static InstallUpdateResult 
+    DownloadAndInstall(this PackageMetadata packageMetadata, Updater updater) {
+        if (packageMetadata.IsInstalled(updater))
+            throw new InvalidOperationException($"Update {packageMetadata} is already installed");
+        var package = packageMetadata.Id.DownloadPackageById(updater.HostClient);
+        var difference = package.GetDifference(programDirectory: updater.ProgramDirectory);
+        difference.DownloadPackageDifference(updater);
+        return difference.InstallPackageDifference(updater);
+    }
+    public static void 
+    ExecuteRunner(this Updater updater) {
+        var applicationStartupFile = Process.GetCurrentProcess().StartInfo.FileName;
+        var processesIdsToWaitExit = new int[]{ Process.GetCurrentProcess().Id};
+        Process.Start("UpToYou.Client.Runner.exe", $"{updater.UpdateFilesDirectory.Quoted()} {updater.BackupDirectory.Quoted()} {applicationStartupFile.Quoted()} {processesIdsToWaitExit.Aggregate("" ,(s, x) => s+","+x).Quoted()}");
+
+    }
+    public static bool 
+    IsInstalled(this PackageMetadata packageMetadata, Updater updater) =>
+       packageMetadata.IsInstalled(programDirectory: updater.ProgramDirectory);
 
     internal static string
-    DownloadUpdateFiles(this PackageDifference difference, Updater updater) {
+    DownloadUpdateFiles(this PackageDifference difference, Updater Updater) {
         if (!difference.IsDifferent()) throw new InvalidOperationException("ActualState doesn't differ from the package");
 
-        var projection = difference.Package.DownloadProjection(updater.HostClient);
+        var projection = difference.Package.DownloadProjection(Updater.HostClient);
         var hostedFileToDownload = difference.GetFilesToDownload(projection).ToList().GetSmallestHostedFilesSet().ToList();
         
         //updater.ProgressContext?.OnExtraTargetValue(hostedFileToDownload.Sum(x =>x.FileSize));
-        var downloadedFiles = hostedFileToDownload.DownloadAllHostedFiles(updater.UpdateFilesDirectory, updater.HostClient).ToList();
-        downloadedFiles.ExtractAllHostedFiles(updater.UpdateFilesDirectory);
-        return updater.UpdateFilesDirectory; 
+        var downloadedFiles = hostedFileToDownload.DownloadAllHostedFiles(Updater.UpdateFilesDirectory, Updater.HostClient).ToList();
+        downloadedFiles.ExtractAllHostedFiles(Updater.UpdateFilesDirectory);
+        return Updater.UpdateFilesDirectory; 
     }
 
     private static HashSet<HostedFile>
@@ -96,58 +131,58 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     public static string RunnerSourcesSubDirectory = ".uptoyou.runner";
 
     public static PackageDifference
-    DownloadPackageDifference(this PackageDifference difference, Updater updater) {
+    DownloadPackageDifference(this PackageDifference difference, Updater Updater) {
         if (!difference.IsDifferent()) throw new InvalidOperationException("ActualState doesn't differ from the package");
-        updater.Logger.LogDebug("Clearing update directory...");
-        updater.UpdateFilesDirectory.ClearDirectoryIfExists();
+        Updater.Logger.LogDebug("Clearing update directory...");
+        Updater.UpdateFilesDirectory.ClearDirectoryIfExists();
 
-        updater.Logger.LogInformation($"Downloading update files for package {difference.Package}");
-        difference.DownloadUpdateFiles(updater);
+        Updater.Logger.LogInformation($"Downloading update files for package {difference.Package}");
+        difference.DownloadUpdateFiles(Updater);
         return difference;
     }
     
     public static InstallUpdateResult 
-    InstallPackageDifference(this PackageDifference difference, Updater updater) {
+    InstallPackageDifference(this PackageDifference difference, Updater Updater) {
         if (!difference.IsDifferent())
             throw new InvalidOperationException($"Package {difference.Package.Metadata.Version} is already installed");
-        updater.Logger.LogInformation($"Installing package update {difference.Package}...");
-        var remainingDifference = difference.InstallAccessibleFiles(updater);
+        Updater.Logger.LogInformation($"Installing package update {difference.Package}...");
+        var remainingDifference = difference.InstallAccessibleFiles(Updater);
         return remainingDifference != null && remainingDifference.IsDifferent()
-            ? new InstallUpdateResult(isCompleted: false, isRunnerExecutionRequired: true)
-            : new InstallUpdateResult(isCompleted: true, isRunnerExecutionRequired: false);
+            ? new InstallUpdateResult(isRestartRequired: true)
+            : new InstallUpdateResult(isRestartRequired: false);
     }
 
     internal static void
-    UpdateUpdaterExe(this PackageFileDifference updaterExeDifference, Updater updater) {
+    UpdateUpdaterExe(this PackageFileDifference updaterExeDifference, Updater Updater) {
         if (!updaterExeDifference.PackageFile.Path.IsInstallExecutable())
             throw new ArgumentException(nameof(updaterExeDifference),$"Expecting a package difference for Updater.exe");
 
-        if (!updater.UpdateFilesDirectory.GetAllDirectoryFiles().TryGet(x => x.MatchGlob($"**/{SelfBinaries.InstallExecutable}"), out var updateFile))
+        if (!Updater.UpdateFilesDirectory.GetAllDirectoryFiles().TryGet(x => x.MatchGlob($"**/{SelfBinaries.InstallExecutable}"), out var updateFile))
             throw new InvalidOperationException("Update file for Updater.exe not found");
 
-        if (updater.IsBackupEnabled)
-            updater.BackupDirectory.CreateDirectoryIfAbsent();
+        if (Updater.IsBackupEnabled)
+            Updater.BackupDirectory.CreateDirectoryIfAbsent();
 
-        updaterExeDifference.UpdateFile(updater, new Dictionary<string, string>(){{updaterExeDifference.PackageFile.FileHash, updateFile}});
+        updaterExeDifference.UpdateFile(Updater, new Dictionary<string, string>(){{updaterExeDifference.PackageFile.FileHash, updateFile}});
     }
 
     public static void 
     VerifyInstallation(this Package package, string programDirectory) => package.Files.Values.ForEach(x => x.Verify( x.Path.ToAbsolute(programDirectory)));
 
     internal static PackageDifference? 
-    InstallAccessibleFiles(this PackageDifference difference, Updater updater) {
-        updater.InitBackupDirectory();
-        var updateFilesCache = difference.GetUpdateFilesHashes(updater).DistinctBy(x => x.hash).ToDictionary(x => x.hash, x => x.file);
+    InstallAccessibleFiles(this PackageDifference difference, Updater Updater) {
+        Updater.InitBackupDirectory();
+        var updateFilesCache = difference.GetUpdateFilesHashes(Updater).DistinctBy(x => x.hash).ToDictionary(x => x.hash, x => x.file);
         
         var remainingDifferences = new List<PackageFileDifference>();
         foreach (var fileDifference in  difference.DifferentFiles)
             try {
-                fileDifference.UpdateFile(updater, updateFilesCache);
+                fileDifference.UpdateFile(Updater, updateFilesCache);
             }
             catch (Exception ex) when (ex is AccessViolationException || ex is UnauthorizedAccessException) {
-                updater.Logger.LogInformation($"File {fileDifference.PackageFile.Path.Value.Quoted()} is not accessible.");
+                Updater.Logger.LogInformation($"File {fileDifference.PackageFile.Path.Value.Quoted()} is not accessible.");
                 remainingDifferences.Add(fileDifference);
-                fileDifference.PrepareForRunner(updater, updateFilesCache);
+                fileDifference.PrepareForRunner(Updater, updateFilesCache);
             }
         if (remainingDifferences.Count > 0)
             return new PackageDifference(package:difference.Package, fileDifferences:remainingDifferences);
@@ -155,28 +190,28 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     }
 
     private static void 
-    Install(this PackageDifference difference, Updater updater) {
-        updater.InitBackupDirectory();
+    Install(this PackageDifference difference, Updater Updater) {
+        Updater.InitBackupDirectory();
 
-        var updateFilesCache = difference.GetUpdateFilesHashes(updater).DistinctBy(x => x.hash).ToDictionary(x => x.hash, x => x.file);
-        difference.DifferentFiles.ForEach(x => x.UpdateFile(updater, updateFilesCache));
-        difference.Package.VerifyInstallation(updater.ProgramDirectory);
+        var updateFilesCache = difference.GetUpdateFilesHashes(Updater).DistinctBy(x => x.hash).ToDictionary(x => x.hash, x => x.file);
+        difference.DifferentFiles.ForEach(x => x.UpdateFile(Updater, updateFilesCache));
+        difference.Package.VerifyInstallation(Updater.ProgramDirectory);
     }
 
     private static void
-    InitBackupDirectory(this Updater updater) {
-        if (updater.IsBackupEnabled) {
-            if (updater.BackupDirectory.DirectoryExists())
-                updater.BackupDirectory.RemoveDirectory();
-            updater.BackupDirectory.CreateDirectoryIfAbsent();
+    InitBackupDirectory(this Updater Updater) {
+        if (Updater.IsBackupEnabled) {
+            if (Updater.BackupDirectory.DirectoryExists())
+                Updater.BackupDirectory.RemoveDirectory();
+            Updater.BackupDirectory.CreateDirectoryIfAbsent();
         }
     }
 
     private static IEnumerable<(string hash, string file)>
-    GetUpdateFilesHashes(this PackageDifference packageDifference, Updater updater) {
+    GetUpdateFilesHashes(this PackageDifference packageDifference, Updater Updater) {
         foreach (var fileDifference in packageDifference.DifferentFiles) {
             var packageFile = fileDifference.PackageFile;
-            var file = packageFile.Path.ToAbsolute(updater.UpdateFilesDirectory);
+            var file = packageFile.Path.ToAbsolute(Updater.UpdateFilesDirectory);
             if (file.FileExists()) {
                 #if DEBUG
                 Contract.Assert(file.GetFileHash() == packageFile.FileHash,
@@ -185,7 +220,7 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
                 yield return (packageFile.FileHash, file);
             }
             else
-                yield return (packageFile.FileHash, fileDifference.GetDeltaFile(updater.UpdateFilesDirectory));
+                yield return (packageFile.FileHash, fileDifference.GetDeltaFile(Updater.UpdateFilesDirectory));
         }
     }
 
@@ -219,34 +254,34 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     }
 
     private static void
-    UpdateFile(this PackageFileDifference fileDifference, Updater updater, Dictionary<string, string> fileHashToPath) {
+    UpdateFile(this PackageFileDifference fileDifference, Updater Updater, Dictionary<string, string> fileHashToPath) {
         if (!fileHashToPath.TryGetValue(fileDifference.PackageFile.FileHash, out var updateFile))
             throw new InvalidOperationException(
                 $"Update file with hash = {fileDifference.PackageFile.FileHash.Quoted()} not found for packageFile {fileDifference.PackageFile.Path.Value.Quoted()}");
 
-        if (updater.IsBackupEnabled)
-            fileDifference.Backup(updater);
+        if (Updater.IsBackupEnabled)
+            fileDifference.Backup(Updater);
 
         if (updateFile.IsPackageDeltaFile()) {
             if (!updateFile.IsUnpackedDeltaFile())
                 throw new InvalidOperationException($"Expecting all delta files to be unpacked, but {updateFile.Quoted()} is packed");
 
             fileDifference.ActualFileState.Path.ApplyDelta(updateFile);
-            updater.Logger.LogDebug($"Applied delta to {fileDifference.PackageFile.Path}");
+            Updater.Logger.LogDebug($"Applied delta to {fileDifference.PackageFile.Path}");
         }
         else {
             updateFile.CopyFile(fileDifference.ActualFileState.Path);
-            updater.Logger.LogDebug($"File copied to {fileDifference.PackageFile.Path}");
+            Updater.Logger.LogDebug($"File copied to {fileDifference.PackageFile.Path}");
         }
     }
 
     private static void
-    Backup(this PackageFileDifference fileDifference, Updater updater) {
+    Backup(this PackageFileDifference fileDifference, Updater Updater) {
         if (fileDifference.ActualFileState.Exists)
             fileDifference.ActualFileState.Path.CopyFile(
                 fileDifference.ActualFileState.Path
-                    .GetPathRelativeTo(updater.ProgramDirectory).Value
-                    .ToAbsoluteFilePath(updater.BackupDirectory));
+                    .GetPathRelativeTo(Updater.ProgramDirectory).Value
+                    .ToAbsoluteFilePath(Updater.BackupDirectory));
     }
 
     private static void
@@ -266,8 +301,8 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     public static bool 
     IsUpdateRunnerQueued() => "updaterequested".ToAbsoluteFilePath(Environment.CurrentDirectory).FileExists();
 
-    private static IEnumerable<Update>
-    GetFreshUpdates(this IList<Update> updateByVersion, Updater updater) {
+    private static IEnumerable<PackageMetadata>
+    GetFreshUpdates(this IList<PackageMetadata> updateByVersion, Updater Updater) {
         #if DEBUG
         updateByVersion.VerifyOrderedByVersion();
         #endif
@@ -275,13 +310,13 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
         foreach (var packageUpdate in updateByVersion)
             if (isInstalledPackageFound)
                 yield return packageUpdate;
-            else if (packageUpdate.PackageMetadata.IsInstalled(updater.ProgramDirectory))
+            else if (packageUpdate.PackageMetadata.IsInstalled(Updater.ProgramDirectory))
                 isInstalledPackageFound = true;
     }
     
     public static string 
-    GetUpdateBackupDirectory(this Update update, Updater updater) =>
-        updater.BackupDirectory.AppendPath(update.PackageMetadata.Name).CreateDirectoryIfAbsent();
+    GetUpdateBackupDirectory(this PackageMetadata update, Updater Updater) =>
+        Updater.BackupDirectory.AppendPath(update.PackageMetadata.Name).CreateDirectoryIfAbsent();
     
 }
 }
