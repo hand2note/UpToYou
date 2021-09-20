@@ -85,8 +85,8 @@ internal static class UpdaterTestContextEx {
         string outDir = $"{version}".CreateMockedSubDirectory(ctx.PackagesDirMock);
 
         return specs.ToPackageBuildContext(
-            srcDir: ctx.SourcesDirMock.AbsolutePathTo($"{version}"), 
-            outDir: outDir).BuildPackage();
+            sourceDirectory: ctx.SourcesDirMock.AbsolutePathTo($"{version}"), 
+            outputDirectory: outDir).BuildPackage();
     }
 
     internal static (PackageProjection projection, string outDir)
@@ -104,7 +104,7 @@ internal static class UpdaterTestContextEx {
             projectionSpecs:specs,
             host:ctx.Host,
             hostRootUrl:ctx.DirMock.Root,
-           log:null);
+           logger:null);
 
         ctx.BuiltProjections.Add(@in.package.Metadata.Version);
 

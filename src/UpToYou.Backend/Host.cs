@@ -21,6 +21,10 @@ public static class
 HostHelper {
     
     public static bool 
+    UpdateManifestFileExists(this IHost host) => 
+        host.FileExists(PackageHostHelper.UpdatesManifestPathOnHost);
+    
+    public static bool 
     TryDownloadUpdateManifest(this IHost host, [NotNullWhen(true)] out UpdatesManifest? result) {
         result = host.DownloadUpdatesManifestIfExists();
         return result != null;
@@ -35,12 +39,12 @@ HostHelper {
     public static void
     Upload(this UpdatesManifest manifest, IHost host) =>
         host.UploadBytes(
-            path: PackageHostHelper.UpdateManifestPathOnHost,
+            path: PackageHostHelper.UpdatesManifestPathOnHost,
             bytes:manifest.ProtoSerializeToBytes().Compress());
 
     public static UpdatesManifest? 
     DownloadUpdatesManifestIfExists(this IHost host) =>
-        host.FileExists(PackageHostHelper.UpdateManifestPathOnHost) ? host.DownloadUpdatesManifest() : null;
+        host.FileExists(PackageHostHelper.UpdatesManifestPathOnHost) ? host.DownloadUpdatesManifest() : null;
 
     internal static List<Package>
     DownloadAllPackages(this IHost host) =>
@@ -115,7 +119,7 @@ HostHelper {
     RemovePackage(this IHost host, string packageId) {
         var package = packageId.DownloadPackageById(host);
         host.Remove(packageId.GetPackageFileOnHost());
-        host.UpdateUpdatesManifest(x => x.Remove(package.Metadata));
+        host.UpdateUpdatesManifest(x => x.RemovePackage(packageId));
         var projection = package.DownloadProjection(host);
         host.RemoveProjectionFiles(projection);
     }

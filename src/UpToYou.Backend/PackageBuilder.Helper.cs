@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,8 +11,8 @@ namespace UpToYou.Backend {
 internal static class BuilderHelper {
     
     public static PackageBuilder 
-    ToPackageBuildContext(this PackageSpecs packageSpecs, string srcDir, string outDir) =>
-        new PackageBuilder(srcDir, outDir, packageSpecs);
+    ToPackageBuildContext(this PackageSpecs packageSpecs, string sourceDirectory, string outputDirectory) =>
+        new PackageBuilder(sourceDirectory, outputDirectory, packageSpecs, ImmutableDictionary<string, string>.Empty);
 
     public static (Package package, string packageFilesDir)
     BuildPackage(this PackageBuilder ctx){
@@ -76,7 +77,6 @@ internal static class BuilderHelper {
 
         if (remainingFiles.Count > 0)
             yield return new PackageProjectionFileSpec(remainingFiles.Select(x => x.ToRelativeGlob()).ToList());
-        
     }
 
     private static IEnumerable<HostedFile>
@@ -181,7 +181,7 @@ internal static class BuilderHelper {
         if ( packageFrom != null) {
             var oldFile = packageFrom.TryGetFileById(@in.packageFileId);
             if (oldFile != null)
-                builder.Log?.LogInformation($"Delta has been built for {oldFile.Path.Value.Quoted()} of size {deltaBytes.Length.BytesToMegabytes()} mb has been built from version {packageFrom.Version}");
+                builder.Logger?.LogInformation($"Delta has been built for {oldFile.Path.Value.Quoted()} of size {deltaBytes.Length.BytesToMegabytes()} mb has been built from version {packageFrom.Version}");
         }
 
         return (delta, deltaFile);
@@ -199,17 +199,17 @@ internal static class BuilderHelper {
     private static HostedFile 
     Log(this HostedFile hostedFile, ProjectionBuilder builder) {
         if (hostedFile.Content is PackageFileDeltasHostedFileContent deltasContent) {
-            builder.Log.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {deltasContent.PackageFileDeltas.Count} deltas.");
-            builder.Log.LogDebug(deltasContent.PackageFileDeltas.Aggregate(string.Empty, (s,x) => s + builder.Package.GetFileById(x.PackageItemId).Path.Value + "\n"));
+            builder.Logger.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {deltasContent.PackageFileDeltas.Count} deltas.");
+            builder.Logger.LogDebug(deltasContent.PackageFileDeltas.Aggregate(string.Empty, (s,x) => s + builder.Package.GetFileById(x.PackageItemId).Path.Value + "\n"));
         }
         else if (hostedFile.Content is PackageItemsHostedFileContent itemsContent)
-            builder.Log.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {itemsContent.PackageItems.Count} files.");
+            builder.Logger.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {itemsContent.PackageItems.Count} files.");
         return hostedFile;
     }
 
     private static PackageProjection 
     Log(this PackageProjection projection, ProjectionBuilder builder) {
-        builder.Log?.LogInformation($"Projection {projection.PackageId.GetPackageProjectionFileOnHost()} has been built with {projection.HostedFiles.Count} hosted files.");
+        builder.Logger?.LogInformation($"Projection {projection.PackageId.GetPackageProjectionFileOnHost()} has been built with {projection.HostedFiles.Count} hosted files.");
         return projection;
     }
 }

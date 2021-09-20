@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,10 +14,13 @@ PackageBuilder {
     public string SourceDirectory { get; }
     public string OutputDirectory{ get; }
     public PackageSpecs Specs { get; }
-    public Dictionary<string, string>? CustomProperties { get; }
-
-    public PackageBuilder(string sourceDirectory, string outputDirectory, PackageSpecs specs,   Dictionary<string, string>? customProperties= null) =>
-        (SourceDirectory, OutputDirectory, Specs, CustomProperties) = (sourceDirectory, outputDirectory, specs, customProperties);
+    public ImmutableDictionary<string, string> CustomProperties { get; }
+    public PackageBuilder(string sourceDirectory, string outputDirectory, PackageSpecs specs, ImmutableDictionary<string, string> customProperties) {
+        SourceDirectory = sourceDirectory;
+        OutputDirectory = outputDirectory;
+        Specs = specs;
+        CustomProperties = customProperties;
+    }
 }
 
 internal class 
@@ -27,15 +31,15 @@ ProjectionBuilder {
     public PackageProjectionSpecs ProjectionSpecs{ get; }
     public IHost Host {get;}
     public string HostRootUrl{ get; }
-    public ILogger Log { get; }
-    public ProjectionBuilder(string sourceDirectory, string outputDirectory, Package package, PackageProjectionSpecs projectionSpecs, IHost host, string hostRootUrl, ILogger log) {
+    public ILogger Logger { get; }
+    public ProjectionBuilder(string sourceDirectory, string outputDirectory, Package package, PackageProjectionSpecs projectionSpecs, IHost host, string hostRootUrl, ILogger logger) {
         SourceDirectory = sourceDirectory;
         OutputDirectory = outputDirectory;
         Package = package;
         ProjectionSpecs = projectionSpecs;
         Host = host;
         HostRootUrl = hostRootUrl;
-        Log = log;
+        Logger = logger;
     }
 }
 }

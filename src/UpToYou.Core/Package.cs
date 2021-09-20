@@ -103,16 +103,6 @@ PackageMetadata: IHasCustomProperties{
     public override string ToString() => $"{Name}, {Version}";
 }
 
-[ProtoContract]
-public class 
-UpdateManifest {
-    [ProtoMember(1)] public ImmutableList<PackageMetadata> PackagesByDate { get; }
-    public UpdateManifest(IList<PackageMetadata> updates) {
-        PackagesByDate = updates.OrderByDescending(x => x.DatePublished).ToImmutableList();
-    }
 
-    public IEnumerable<PackageMetadata> Packages => PackagesByDate;
-    protected UpdateManifest() => PackagesByDate = ImmutableList<PackageMetadata>.Empty;
-}
 
 }

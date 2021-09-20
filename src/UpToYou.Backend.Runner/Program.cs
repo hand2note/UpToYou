@@ -15,11 +15,10 @@ class Program {
                 x.CaseSensitive = false;
                 x.HelpWriter = Console.Error;
             });
-            var result = parser.ParseArguments<PushUpdateOptions, RemovePackageOptions, ChangeUpdateNotesOptions, GetUpdateNotesOptions, CopyPackageFilesOptions>(args)
+            var result = parser.ParseArguments<PushUpdateOptions, RemovePackageOptions, GetUpdateNotesOptions, CopyPackageFilesOptions>(args)
                 .WithParsed<PushUpdateOptions>(x => x.PushUpdate())
                 .WithParsed<CopyPackageFilesOptions>(x => x.CopyPackageFiles())
                 .WithParsed<GetUpdateNotesOptions>(x => x.GetUpdateNotes())
-                .WithParsed<ChangeUpdateNotesOptions>(x => x.ChangeUpdateNotes())
                 .WithParsed<RemovePackageOptions>(x => x.RemovePackage());
 
             if (result.Tag == ParserResultType.NotParsed)

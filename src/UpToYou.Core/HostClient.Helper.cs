@@ -8,8 +8,13 @@ using System.Threading.Tasks;
 
 namespace UpToYou.Core {
 public static class PackageHostHelper {
-    
     public const string UpdatesManifestFileName = ".updates";
+
+    internal static RelativePath
+    UpdatesManifestPathOnHost => 
+        UpdatesManifestFileName
+            .AppendFileExtensions(PackageHostHelper.ProtoExtension, Compressing.DefaultCompressMethodFileExtension).ToRelativePath();
+    
     public const string ProtoExtension = ".proto";
     public const string PackageExtension = ".package";
     public const string PackagesHostingDirectory = "packages";
@@ -42,11 +47,6 @@ public static class PackageHostHelper {
     ToDeltasSubUrlOnHost(this RelativePath path) => DeltaFilesHostDir.AppendPath(path.Value).ToRelativePath();
 
     internal static RelativePath
-    UpdateManifestPathOnHost => 
-        UpdatesManifestFileName
-            .AppendFileExtensions(ProtoExtension, Compressing.DefaultCompressMethodFileExtension).ToRelativePath();
-
-    internal static RelativePath
     GetPathOnHost(this Package package) => package.Id.GetPackageFileOnHost();
 
     internal static RelativePath
@@ -56,16 +56,9 @@ public static class PackageHostHelper {
             .AppendFileExtensions(ProjectionExtension, ProtoExtension, Compressing.DefaultCompressMethodFileExtension)
             .ToRelativePath();
 
-    public static UpdateManifest
-    DownloadUpdatesManifest(this IHostClient client) =>
-        UpdateManifestPathOnHost
-            .DownloadBytes(client)
-            .Decompress()
-            .DeserializeProto<UpdateManifest>();
-
     public static List<UpdateNotes>
-    DownloadUpdateNotes(this List<Update> updates, string locale, IHostClient host) =>
-        updates.AsParallel().Select(x => x.PackageMetadata.Name).Distinct()
+    DownloadUpdateNotes(this List<PackageMetadata> packages, string locale, IHostClient host) =>
+        packages.AsParallel().Select(x => x.Name).Distinct()
             .SelectMany(x => host.DownloadUpdateNotes(x, locale)
                 .ParseUpdateNotes()
                 .Select(y => new UpdateNotes(x, y.version, y.notes))).ToList();
@@ -128,5 +121,12 @@ public static class PackageHostHelper {
     internal static void 
     DownloadFile(this IHostClient client, RelativePath path, Stream outStream) =>
         client.DownloadFile(path, progress: NullProgress.Instance, CancellationToken.None, outStream);
+    
+    public static UpdatesManifest
+    DownloadUpdatesManifest(this IHostClient client) =>
+        UpdatesManifestPathOnHost
+            .DownloadBytes(client)
+            .Decompress()
+            .DeserializeProto<UpdatesManifest>();
 }
 }

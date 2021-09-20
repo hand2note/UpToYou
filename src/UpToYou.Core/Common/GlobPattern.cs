@@ -108,7 +108,7 @@ GlobHelper {
     }
 
     public static IEnumerable<RelativePath> 
-    GetMatchingFilesRelative(this string directory, List<RelativeGlob> globs, List<RelativeGlob> excludingGlobs) {
+    GetMatchingFilesRelative(this string directory, IList<RelativeGlob> globs, IList<RelativeGlob> excludingGlobs) {
         foreach (var file in directory.EnumerateDirectoryRelativeFiles()) {
             bool isExcluded = false;
             foreach (var excludingGlob in excludingGlobs)

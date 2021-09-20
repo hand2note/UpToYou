@@ -16,9 +16,6 @@ namespace UpToYou.Client
                    //actualFile.GetFileHash() == versionProvider.FileHash;
         }
 
-        public static Version?
-        GetInstalledVersion(this Update update, string programDirectory) => update.PackageMetadata.GetInstalledVersion(programDirectory);
-
         public static Version? 
         GetInstalledVersion(this PackageMetadata packageMetadata, string programDirectory) { 
             var versionProvider = packageMetadata.VersionProviderFile.Path.ToAbsolute(programDirectory);

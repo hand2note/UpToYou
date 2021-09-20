@@ -302,21 +302,21 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     IsUpdateRunnerQueued() => "updaterequested".ToAbsoluteFilePath(Environment.CurrentDirectory).FileExists();
 
     private static IEnumerable<PackageMetadata>
-    GetFreshUpdates(this IList<PackageMetadata> updateByVersion, Updater Updater) {
+    GetFreshUpdates(this IList<PackageMetadata> packagesByVersion, Updater Updater) {
         #if DEBUG
-        updateByVersion.VerifyOrderedByVersion();
+        packagesByVersion.VerifyOrderedByVersion();
         #endif
         bool isInstalledPackageFound = false;
-        foreach (var packageUpdate in updateByVersion)
+        foreach (var packageUpdate in packagesByVersion)
             if (isInstalledPackageFound)
                 yield return packageUpdate;
-            else if (packageUpdate.PackageMetadata.IsInstalled(Updater.ProgramDirectory))
+            else if (packageUpdate.IsInstalled(Updater.ProgramDirectory))
                 isInstalledPackageFound = true;
     }
     
     public static string 
     GetUpdateBackupDirectory(this PackageMetadata update, Updater Updater) =>
-        Updater.BackupDirectory.AppendPath(update.PackageMetadata.Name).CreateDirectoryIfAbsent();
+        Updater.BackupDirectory.AppendPath(update.Name).CreateDirectoryIfAbsent();
     
 }
 }

@@ -46,12 +46,12 @@ RemovePackageModule {
             return;
         }
 
-        if (!updateManifest.TryGetUpdate(options.PackageVersion.ParseVersion(), options.PackageName, out var update)) {
+        if (!updateManifest.TryGetPackage(options.PackageName, options.PackageVersion.ParseVersion(), out var package)) {
             logger.LogWarning($"Update with version {options.PackageVersion.ParseVersion()} and name {(options.PackageName??string.Empty).Quoted()} not found in the update manifest");
             return;
         }
         
-        updateManifest.Remove(update);
+        updateManifest.RemovePackage(package.Id);
 
         updateManifest.Upload(host);
         logger.LogInformation("Update manifest has been successfully updated");

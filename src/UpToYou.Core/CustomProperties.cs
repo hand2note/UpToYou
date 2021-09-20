@@ -53,22 +53,17 @@ CustomProperties {
         return null;
     }
 
-    internal static Dictionary<string, string>? 
-    AddCustomProperties(this Dictionary<string, string>? props1, Dictionary<string, string>? props2, bool @override) {
-        if (props1 == null)
-            return props2;
-        if (props2 == null)
-            return props1;
+    internal static ImmutableDictionary<string, string>
+    AddCustomProperties(this ImmutableDictionary<string, string> properties, ImmutableDictionary<string, string> other, bool @override) {
+        var result = properties.ToDictionary(x => x.Key, x => x.Value);
 
-        var result = props1.ToDictionary(x => x.Key, x => x.Value);
-
-        foreach (var kv2 in props2) {
-            if (!props1.ContainsKey(kv2.Key))
+        foreach (var kv2 in other) {
+            if (!properties.ContainsKey(kv2.Key))
                 result.Add(kv2.Key, kv2.Value);
             else if (@override)
                 result[kv2.Key] = kv2.Value;
         }
-        return result;
+        return result.ToImmutableDictionary();
     }
 
 

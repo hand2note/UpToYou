@@ -75,7 +75,7 @@ internal static class TestCasesHelper {
             projectionSpecs:test.GetProjectionSpecs(),
             host:ctx.Host,
             hostRootUrl:ctx.HostRootUrl, 
-            log: NullLogger.Instance);
+            logger: NullLogger.Instance);
 
         return projectionBuildCtx.BuildProjection();
     }
@@ -88,8 +88,8 @@ internal static class TestCasesHelper {
     BuildPackage(this IPackageTestCase test, UpdaterTestContext ctx) 
         => test.GetPackageSpecs()
                .ToPackageBuildContext(
-                   srcDir: test.SourceDirectory, 
-                   outDir: ctx.PackageFilesDirectory).BuildPackage();
+                   sourceDirectory: test.SourceDirectory, 
+                   outputDirectory: ctx.PackageFilesDirectory).BuildPackage();
 
     internal static PackageSpecs GetPackageSpecs(this IPackageTestCase test) =>
         test.PackageSpecs 

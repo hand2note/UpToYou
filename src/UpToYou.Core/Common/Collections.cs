@@ -140,5 +140,9 @@ Collections {
     
     public static ImmutableList<T>
     ToSingleImmutableList<T>(this T item) => item.ToSingleEnumerable().ToImmutableList();
+    
+    public static ImmutableList<TOut> 
+    MapToImmutableList<TIn, TOut>(this IEnumerable<TIn> enumerable, Func<TIn, TOut> convert) => 
+        ImmutableList.CreateRange(enumerable.Select(convert));
 }
 }

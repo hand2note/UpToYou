@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Security;
 using CommandLine;
@@ -90,7 +91,7 @@ PushUpdateHelper {
 
         //Build package
         logger.LogDebug("Building package...");
-        var buildPackageCtx = new PackageBuilder(
+        var packageBuilder = new PackageBuilder(
             sourceDirectory:options.SourceDirectory,
             outputDirectory:packageDirectory,
             specs:options.PackageSpecsFile?.ReadAllFileText().Trim().ParsePackageSpecsFromYaml() 
@@ -98,37 +99,35 @@ PushUpdateHelper {
                         .EnumerateDirectoryRelativeFiles()
                         .FilesToPackageSpecs(options.VersionProvider?.ToRelativePath() 
                             ?? throw new InvalidOperationException($"VersionProvider should be specified in case of package specs are not specified.")),
-            customProperties:options.PackageCustomProperties?.ToCustomProperties());
+            customProperties:options.PackageCustomProperties?.ToCustomProperties()??ImmutableDictionary<string, string>.Empty);
 
-        var (package, _) = buildPackageCtx.BuildPackage();
+        var (package, _) = packageBuilder.BuildPackage();
         logger.LogInformation($"Package {package.Metadata.Name} #{package.Version} has been successfully built!");
 
         //Retrieve host
         var host = options.GetFilesHost();
         
         //Check existing packages
-        bool isSamePackageAlreadyExists = false;
+        var isSamePackageAlreadyExists = false;
         var allPackages = host.DownloadAllPackages();
         if (allPackages.TryGet(x => x.Metadata.IsSamePackage(package.Metadata), out var samePackageOnHost)) {
             isSamePackageAlreadyExists = true;
             logger.LogWarning("The same package is already present on the host and will be skipped. However, the update notes will be overriden.");
         }
 
-        var allUpdatesSpecs = options.UpdatesSpecsFile?.VerifyFileExistence().ReadAllFileText().ParseUpdatesSpecsFromYaml();
         if (!isSamePackageAlreadyExists) {
             //Build projection
-            var buildProjectionCtx = new ProjectionBuilder(
+            var projectionBuilder = new ProjectionBuilder(
                 sourceDirectory: packageDirectory,
                 outputDirectory: projectionDirectory,
                 package: package,
                 projectionSpecs: options.ProjectionSpecsFile?.ReadAllFileText().Trim().ParseProjectionFromYaml()
-                                 ?? options.SourceDirectory.EnumerateDirectoryRelativeFiles().ToList()
-                                           .ToSingleProjectionFileSpec().ToProjectionSpecs(),
+                    ?? options.SourceDirectory.EnumerateDirectoryRelativeFiles().ToList().ToSingleProjectionFileSpec().ToProjectionSpecs(),
                 host: host,
-                options.LocalHostRootPath ?? options.AzureBlobStorageProperties().GetRootUrl(),
-                new ConsoleLogger());
+                hostRootUrl: options.LocalHostRootPath ?? options.AzureBlobStorageProperties().GetRootUrl(),
+                logger: new ConsoleLogger());
 
-            var projectionBuildResult = buildProjectionCtx.BuildProjection(allCachedPackages: allPackages);
+            var projectionBuildResult = projectionBuilder.BuildProjection(allCachedPackages: allPackages);
             logger.LogInformation($"Package {package.Metadata.Name} #{package.Version} has been successfully published!");
 
             logger.LogInformation("Package projection has been successfully built!");
@@ -146,36 +145,12 @@ PushUpdateHelper {
                 .ForEach(x => host.RemovePackage(x.Id));
 
             //Update manifest
-            var updateSpec = allUpdatesSpecs?.FindUpdateSpec(package.Version);
-            var update = updateSpec.ToUpdate(package.Metadata);
-
-            if (!host.TryDownloadUpdateManifest(out var updateManifest))
-                updateManifest = new UpdatesManifest(new List<Update>() {update});
-            else
-                updateManifest = updateManifest!.AddOrChangeUpdate(update);
-            
+            var updateManifest = host.UpdateManifestFileExists() 
+                ? host.DownloadUpdatesManifest().AddOrChangeUpdate(package.Metadata)
+                : new UpdatesManifest(package.Metadata.ToSingleImmutableList());
+                    
             updateManifest.Upload(host);
         }
-
-        //Updating updates manifest based on package updates specs
-        if (allUpdatesSpecs != null && !allUpdatesSpecs.IsEmpty)
-            if (host.TryDownloadUpdateManifest(out var updateManifest)) {
-                foreach (var existingUpdate in updateManifest!.GetUpdates(package.Metadata.Name).ToList()) {
-                    var updateSpec = allUpdatesSpecs.FindUpdateSpec(existingUpdate.PackageMetadata.Version);
-                    if (updateSpec != null) {
-                        updateManifest.ChangeUpdate(updateSpec.ToUpdate(existingUpdate.PackageMetadata));
-                    }
-                    else {
-                        updateManifest.ChangeUpdate(new Update(
-                            packageMetadata:existingUpdate.PackageMetadata,
-                            updatePolicy:UpdatePolicy.Default,
-                            customProperties:null));
-                    }
-
-                }
-
-                updateManifest!.Upload(host);
-            }
 
         //Upload update notes
         if (options.UpdateNotesFiles != null) {
@@ -202,9 +177,9 @@ PushUpdateHelper {
         logger.LogInformation("Updates manifest has been updated");
     }
     
-    public static Dictionary<string, string> 
+    public static ImmutableDictionary<string,string> 
     ToCustomProperties(this IEnumerable<string> option) =>
-        option.Select(x => x.Split(':')).ToDictionary(x => x[0].Trim(),x => x[1].Trim());
+        option.Select(x => x.Split(':')).ToImmutableDictionary(x => x[0].Trim(),x => x[1].Trim());
 }
 
 }
