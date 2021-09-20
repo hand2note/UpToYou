@@ -68,7 +68,6 @@ UpdateNotesHelper {
         return (null, null);
     }
 
-
     public static IEnumerable<(Version version, string notes)> 
     ParseUpdateNotes(this string text) =>
         text.Split(new[] {PackageNotesAnchor}, StringSplitOptions.RemoveEmptyEntries).Where(x => x!= "\uFEFF"/*BOM*/).Select(x => x.Trim().ParsePackageUpdateNotes());
