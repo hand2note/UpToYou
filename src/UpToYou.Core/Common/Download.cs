@@ -17,6 +17,10 @@ DownloadHelper {
         return outputFile;
     }
     
+    public static void 
+    Download(this HttpClient client, string uri, IProgress<long> progress, CancellationToken cancellationToken, Stream outStream) =>
+        client.DownloadAsync(uri, progress, cancellationToken, outStream).Wait(cancellationToken);
+
     public static async Task
     DownloadAsync(this HttpClient client, string uri, IProgress<long> progress, CancellationToken cancellationToken, Stream outStream) {
         var response = await client.GetAsync(uri, cancellationToken);
