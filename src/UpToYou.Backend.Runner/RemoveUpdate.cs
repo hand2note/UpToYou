@@ -53,7 +53,7 @@ RemovePackageModule {
         
         updateManifest.RemovePackage(package.Id);
 
-        updateManifest.Upload(host);
+        updateManifest.UploadUpdateManifest(host);
         logger.LogInformation("Update manifest has been successfully updated");
 
     }

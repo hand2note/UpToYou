@@ -17,21 +17,21 @@ public class ProjectionBuildTests {
     [Test]
     public void BuildPackageProjectionDeltas() {
         //Arrange
-        using var ctx = new UpdaterTestContext();
+        using var updater = new UpdaterTestContext();
 
         var test = new Pjtc_h2n_with_deltas("3.2.6.24",new Fhtc_last_two_versions_with_deltas());
 
         //Act
-        var (baseProjection, _) = test.BuildProjection(ctx);
-        var package = baseProjection.PackageId.DownloadPackageById(ctx.Host);
+        var (baseProjection, _) = test.BuildProjection(updater);
+        var package = baseProjection.PackageId.DownloadPackageById(updater.Host);
 
         //Assert
-        var deltas = baseProjection.HostedFiles.Select(x => x.Content as PackageFileDeltasHostedFileContent).NotNull().ToList();
+        var deltas = baseProjection.Files.Select(x => x.Content as PackageProjectionFileDeltaContent).NotNull().ToList();
 
-        Assert.AreEqual(3, baseProjection.HostedFiles.Count);
+        Assert.AreEqual(3, baseProjection.Files.Count);
         Assert.AreEqual(2, deltas.Count);
         foreach (var delta in deltas) {
-            delta.PackageFileDeltas.ForEach(x => Assert.AreEqual(package.GetFileById(x.PackageItemId).FileHash, x.NewHash));
+            delta.PackageFileDeltas.ForEach(x => Assert.AreEqual(package.GetFileById(x.PackageFileId).FileHash, x.NewHash));
         }
         //AssertHostedFiles(ctx);
     }
@@ -48,7 +48,7 @@ public class ProjectionBuildTests {
 
         //Assert
         foreach (var specItemPath in test.PackageTestCase.PackageSpecs!.GetFilesRelative(ctx.PackageFilesDirectory)) 
-            Assert.IsTrue(projection.HostedFiles.Any(x => x.Content.RelevantItemsIds.Any(id => package.GetFileById(id).Path.Equals(specItemPath))), specItemPath.Value);
+            Assert.IsTrue(projection.Files.Any(x => x.Content.RelevantPackageFileIds.Any(id => package.GetFileById(id).Path.Equals(specItemPath))), specItemPath.Value);
 
         AssertProjection(package, TestData.H2nTestProjectionSpecs, projection);
 
@@ -57,14 +57,14 @@ public class ProjectionBuildTests {
 
     private void AssertProjection(Package package, PackageProjectionSpecs specs, PackageProjection projection) {
         Assert.AreEqual(package.Id, projection.PackageId);
-        Assert.IsNotEmpty(projection.HostedFiles);
-        Assert.IsTrue(projection.HostedFiles.SelectMany(x => x.RelevantItemsIds).All(x => package.Files.Values.Select(y => y.Id).Contains(x)));
+        Assert.IsNotEmpty(projection.Files);
+        Assert.IsTrue(projection.Files.SelectMany(x => x.RelevantItemsIds).All(x => package.Files.Values.Select(y => y.Id).Contains(x)));
     }
 
-    private void AssertHostedFile(HostedFile hostedFile) {
-        Assert.Greater(hostedFile.FileSize, 0);
-        Assert.IsTrue(hostedFile.SubUrl.Value.Contains(hostedFile.FileHash));
-        Assert.IsNotEmpty(hostedFile.RelevantItemsIds);
+    private void AssertHostedFile(PackageProjectionFile packageProjectionFile) {
+        Assert.Greater(packageProjectionFile.FileSize, 0);
+        Assert.IsTrue(packageProjectionFile.SubUrl.Value.Contains(packageProjectionFile.FileHash));
+        Assert.IsNotEmpty(packageProjectionFile.RelevantItemsIds);
     }
 
     /// <summary>

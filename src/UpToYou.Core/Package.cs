@@ -4,22 +4,21 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using ProtoBuf;
+#pragma warning disable 8618
 
 namespace UpToYou.Core {
     
 [ProtoContract]
 public class Package {
     [ProtoMember(1)] public PackageMetadata Metadata { get; }
-    [ProtoMember(2)] public Dictionary<RelativePath, PackageFile> Files { get; }
-    public Package(PackageMetadata metadata, Dictionary<RelativePath, PackageFile> files) {
+    [ProtoMember(2)] public ImmutableDictionary<RelativePath, PackageFile> Files { get; }
+    public Package(PackageMetadata metadata, ImmutableDictionary<RelativePath, PackageFile> files) {
         Metadata = metadata;
         Files = files;
         _idToFile = new Lazy<Dictionary<string, PackageFile>>(() => Files.Values.ToDictionary(x => x.Id, x => x));
     }
 
-    #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-    protected Package():this(null, null) { }
-    #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+    protected Package() => Files = ImmutableDictionary<RelativePath, PackageFile>.Empty;
 
     public string Id => Metadata.Id;
     public Version Version => Metadata.Version;
@@ -38,7 +37,7 @@ public class Package {
     public override string ToString() => Metadata.ToString();
 }
 
-[ProtoContract]
+[ProtoContract(SkipConstructor = true)]
 public class
 PackageFile {
     [ProtoMember(1)] public string Id {get;}
@@ -46,24 +45,17 @@ PackageFile {
     [ProtoMember(3)] public long FileSize {get;}
     [ProtoMember(4)] public string FileHash {get;}
     [ProtoMember(5)] public Version? FileVersion {get;}
-    public PackageFile(string id, RelativePath path, long fileSize, string fileHash, Version? fileVersion) =>
-        (Id, Path, FileSize, FileHash, FileVersion) = (id, path, fileSize, fileHash, fileVersion);
-    
-    protected PackageFile() => (Id, FileHash) = ("", "");
-    
-    public string 
-    GetFile(string srcDir) => Path.ToAbsolute(srcDir);
-    
-    public void 
-    Verify(string path) {
-        Contract.Assert(path.GetFileHash() == FileHash, $"Hash of {Path.Value.Quoted()} is not equal expected");
-        Contract.Assert(FileVersion == null || path.GetFileVersion() == FileVersion, $"Expected {FileVersion} of {Path.Value.Quoted()} but was {path.GetFileVersion()?.ToString().Quoted()}");
+    public PackageFile(string id, RelativePath path, long fileSize, string fileHash, Version? fileVersion) {
+        Id = id;
+        Path = path;
+        FileSize = fileSize;
+        FileHash = fileHash;
+        FileVersion = fileVersion;
     }
-
+    
+    public string GetFile(string srcDir) => Path.ToAbsolute(srcDir);
     public override string ToString() => Path.Value;
 }
-
-
 
 [ProtoContract]
 public class
@@ -83,13 +75,7 @@ PackageMetadata: IHasCustomProperties{
         CustomProperties = customProperties;
     }
 
-    // ReSharper disable once UnusedMember.Global
-    #pragma warning disable CS8618 // Non-nullable field is uninitialized.
-    protected PackageMetadata() {
-        Name = string.Empty;
-        CustomProperties = ImmutableDictionary<string, string>.Empty;
-    }
-    #pragma warning restore CS8618 // Non-nullable field is uninitialized.
+    protected PackageMetadata() => CustomProperties = ImmutableDictionary<string, string>.Empty;
 
     public bool 
     IsSamePackage(PackageMetadata other) =>

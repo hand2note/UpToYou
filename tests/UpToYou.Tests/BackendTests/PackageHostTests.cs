@@ -14,19 +14,19 @@ public class PackageHostTests {
     [Test]
     public void RemovePackage() {
         //Arrange
-        using var ctx = new UpdaterTestContext();
+        using var updater = new UpdaterTestContext();
         var testHostState =new Fhtc_last_two_versions_with_deltas();
-        testHostState.Build(ctx);
+        testHostState.Build(updater);
 
-        var hostFiles = ctx.HostRootUrl.GetAllDirectoryFiles().ToFilesHashesMap();
-        var (newProjection, _) = new Pjtc_h2n_with_deltas("3.2.6.24").BuildProjection(ctx).UploadToHost(ctx);
-        var package = newProjection.PackageId.DownloadPackageById(ctx.Host);
+        var hostFiles = updater.HostRootUrl.GetAllDirectoryFiles().ToFilesHashesMap();
+        var (newProjection, _) = new Pjtc_h2n_with_deltas("3.2.6.24").BuildProjection(updater).UploadToHost(updater);
+        var package = newProjection.PackageId.DownloadPackageById(updater.Host);
         
         //Act
-        ctx.Host.RemovePackage(package.Id);
+        updater.Host.RemovePackage(package.Id);
 
         //Assert
-        var actualHostFiles = ctx.HostRootUrl.GetAllDirectoryFiles().ToFilesHashesMap();
+        var actualHostFiles = updater.HostRootUrl.GetAllDirectoryFiles().ToFilesHashesMap();
         actualHostFiles.ShouldBeSame(hostFiles);
     }
 

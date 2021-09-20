@@ -12,43 +12,43 @@ DifferenceHelper{
 
     public static PackageDifference
     GetDifference(this Package package, string programDirectory, bool cache) =>
-        new BuildDifferenceContext(programDirectory, package, cache ? new BuildDifferenceCache() : null).GetDifference();
+        new PackageDifferenceBuilder(programDirectory, package, cache ? new BuildDifferenceCache() : null).GetDifference();
 
     public static PackageDifference
     GetDifference(this Package package, string programDirectory, BuildDifferenceCache? cache = null) =>
-        new BuildDifferenceContext(programDirectory, package, cache).GetDifference();
+        new PackageDifferenceBuilder(programDirectory, package, cache).GetDifference();
     
     private class 
-    BuildDifferenceContext {
+    PackageDifferenceBuilder {
         public string RootDirectory { get; }
         public Package Package {get;}
         public BuildDifferenceCache? Cache { get; }
 
-        public BuildDifferenceContext(string rootDirectory, Package package, BuildDifferenceCache? cache) => 
+        public PackageDifferenceBuilder(string rootDirectory, Package package, BuildDifferenceCache? cache) => 
             (RootDirectory, Package, Cache) = (rootDirectory, package, cache);
     }
 
     private static PackageDifference
-    GetDifference(this BuildDifferenceContext ctx) => 
+    GetDifference(this PackageDifferenceBuilder builder) => 
         new PackageDifference(
-            package:ctx.Package,
-            fileDifferences:ctx.Package.Files.Values.Select(x => x.GetDifference(ctx)).ToList());
+            package:builder.Package,
+            fileDifferences:builder.Package.Files.Values.Select(x => x.GetDifference(builder)).ToList());
 
     private static PackageFileDifference
-    GetDifference(this PackageFile packageFile, BuildDifferenceContext ctx) => 
+    GetDifference(this PackageFile packageFile, PackageDifferenceBuilder builder) => 
         new PackageFileDifference(
-            actualFileState:packageFile.Path.GetActualFileState(ctx),
+            actualFileState:packageFile.Path.GetActualFileState(builder),
             packageFile:packageFile);
 
     private static ActualFileState
-    GetActualFileState(this RelativePath path, BuildDifferenceContext ctx) {
-        var file = path.ToAbsolute(ctx.RootDirectory);  
-        return ctx.Cache?.FindFileState(file) ?? file.GetActualFileState().Cache(ctx);
+    GetActualFileState(this RelativePath path, PackageDifferenceBuilder builder) {
+        var file = path.ToAbsolute(builder.RootDirectory);  
+        return builder.Cache?.FindFileState(file) ?? file.GetActualFileState().Cache(builder);
     }
 
     private static ActualFileState
-    Cache(this ActualFileState state, BuildDifferenceContext ctx) {
-        ctx.Cache?.Add(state);
+    Cache(this ActualFileState state, PackageDifferenceBuilder builder) {
+        builder.Cache?.Add(state);
         return state;
     }
 

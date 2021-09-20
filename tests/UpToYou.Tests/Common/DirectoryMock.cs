@@ -20,12 +20,12 @@ DirectoryMock{
         new DirectoryMockContext(Environment.CurrentDirectory.AppendPath(prefix+ UniqueId.NewUniqueId(RandomNameLength)).CreateDirectory());
 
     public static string 
-    CreateRandomSubDirectory(this DirectoryMockContext ctx) => 
-        UniqueId.NewUniqueId(RandomNameLength).ToAbsoluteMockPath(ctx).VerifyDirectoryAbsent().CreateDirectory();
+    CreateRandomSubDirectory(this DirectoryMockContext updater) => 
+        UniqueId.NewUniqueId(RandomNameLength).ToAbsoluteMockPath(updater).VerifyDirectoryAbsent().CreateDirectory();
 
     public static string
-    CreateMockedSubDirectory(this string dir, DirectoryMockContext ctx) {
-        var newDir = dir.ToAbsoluteFilePath(ctx.Root);
+    CreateMockedSubDirectory(this string dir, DirectoryMockContext updater) {
+        var newDir = dir.ToAbsoluteFilePath(updater.Root);
         if (newDir.DirectoryExists()) 
             throw new InvalidOperationException($"Mocked sub directory {newDir.Quoted()} already exists");
         return newDir.CreateDirectory();

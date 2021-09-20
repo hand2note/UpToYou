@@ -8,12 +8,12 @@ namespace UpToYou.Backend {
     
 internal class 
 PackageSpecs: IHasCustomProperties {
-    public string? PackageName { get; }
+    public string PackageName { get; }
     public ImmutableList<RelativeGlob> Files { get; }
     public ImmutableList<RelativeGlob> ExcludedFiles { get; }
     public RelativePath VersionProvider { get; }
     public ImmutableDictionary<string, string> CustomProperties { get; }
-    public PackageSpecs(string? packageName, ImmutableList<RelativeGlob> files, ImmutableList<RelativeGlob> excludedFiles, RelativePath versionProvider, ImmutableDictionary<string, string> customProperties) {
+    public PackageSpecs(string packageName, ImmutableList<RelativeGlob> files, ImmutableList<RelativeGlob> excludedFiles, RelativePath versionProvider, ImmutableDictionary<string, string> customProperties) {
         PackageName = packageName;
         Files = files;
         ExcludedFiles = excludedFiles;

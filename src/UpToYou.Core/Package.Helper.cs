@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,5 +27,13 @@ public static class PackageHelper {
     
     public static void 
     VerifyOrderedByDate(this IList<PackageMetadata> packages) => packages.VerifyOrdered(x => x.DatePublished);
+    
+    public static void 
+    Verify(this PackageFile packageFile, string path) {
+        if (path.GetFileHash() != packageFile.FileHash)
+            throw new InvalidOperationException($"Hash of {packageFile.Path.Value.Quoted()} is not equal expected");
+        if (packageFile.FileVersion == null || path.GetFileVersion() != packageFile.FileVersion)
+            throw new InvalidOperationException($"Expected {packageFile.FileVersion} of {packageFile.Path.Value.Quoted()} but was {path.GetFileVersion()?.ToString().Quoted()}");
+    }
 }
 }

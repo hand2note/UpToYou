@@ -7,54 +7,29 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace UpToYou.Core {
-public static class PackageHostHelper {
-    public const string UpdatesManifestFileName = ".updates";
+public static class HostHelper {
+
+    internal static RelativePath UpdatesManifestPathOnHost => ".updates.proto.xz".ToRelativePath();
+    internal static string AllPackagesGlobPattern => $"packages\\*.package*";
+    internal static string AllProjectionsGlobalPattern => $"projections\\*.projection*";
 
     internal static RelativePath
-    UpdatesManifestPathOnHost => 
-        UpdatesManifestFileName
-            .AppendFileExtensions(PackageHostHelper.ProtoExtension, Compressing.DefaultCompressMethodFileExtension).ToRelativePath();
-    
-    public const string ProtoExtension = ".proto";
-    public const string PackageExtension = ".package";
-    public const string PackagesHostingDirectory = "packages";
-    
-    public const string ProjectionExtension = ".projection";
-    public const string ProjectionsHostDir = "projections";
-    public const string ProjectionFilesHostDir = "data";
-    public const string DeltaFilesHostDir = "data\\deltas";
-    public const string UpdateNotesHostDir = "notes";
-
-    internal static string AllPackagesGlobPattern => $"{PackagesHostingDirectory}\\*{PackageExtension}*";
-    internal static string AllProjectionsGlobalPattern => $"{ProjectionsHostDir}\\*{ProjectionExtension}*";
+    GetPackageFileOnHost(this string packageId) => $"packages/{packageId}.package.proto.xz".ToRelativePath();
 
     internal static RelativePath
-    GetPackageFileOnHost(this string packageId) => 
-        PackagesHostingDirectory.AppendPath(packageId)
-          .AppendFileExtensions(PackageExtension, ProtoExtension, Compressing.DefaultCompressMethodFileExtension)
-          .ToRelativePath();
+    GetPackageProjectionFileOnHost(this string packageId) => $"projections/{packageId}.projection.proto.xz".ToRelativePath();
 
     internal static RelativePath
-    GetPackageProjectionFileOnHost(this string packageId) => 
-        ProjectionsHostDir.AppendPath(packageId)
-          .AppendFileExtensions(ProjectionExtension, ProtoExtension, Compressing.DefaultCompressMethodFileExtension)
-          .ToRelativePath();
+    ToHostedFileSubUrlOnHost(this RelativePath path) => "data".AppendPath(path.Value).ToRelativePath();
 
     internal static RelativePath
-    ToHostedFileSubUrlOnHost(this RelativePath path) => ProjectionFilesHostDir.AppendPath(path.Value).ToRelativePath();
-
-    internal static RelativePath
-    ToDeltasSubUrlOnHost(this RelativePath path) => DeltaFilesHostDir.AppendPath(path.Value).ToRelativePath();
+    ToDeltasSubUrlOnHost(this RelativePath path) => "data\\deltas".AppendPath(path.Value).ToRelativePath();
 
     internal static RelativePath
     GetPathOnHost(this Package package) => package.Id.GetPackageFileOnHost();
 
     internal static RelativePath
-    GetPathOnHost(this PackageProjection projection) => 
-        ProjectionsHostDir
-            .AppendPath(projection.PackageId)
-            .AppendFileExtensions(ProjectionExtension, ProtoExtension, Compressing.DefaultCompressMethodFileExtension)
-            .ToRelativePath();
+    GetPathOnHost(this PackageProjection projection) => projection.PackageId.GetPackageProjectionFileOnHost();
 
     public static List<UpdateNotes>
     DownloadUpdateNotes(this List<PackageMetadata> packages, string locale, IHostClient host) =>
@@ -68,10 +43,7 @@ public static class PackageHostHelper {
         client.DownloadBytes(GetUpdateNotesFileOnHost(packageName, locale)).Decompress().ToUtf8String();
 
     internal static RelativePath
-    GetUpdateNotesFileOnHost(string packageName, string locale) => 
-        UpdateNotesHostDir
-        .AppendPath(UpdateNotesHelper.GetUpdateNotesFileName(packageName, locale))
-        .AppendFileExtension(Compressing.DefaultCompressMethodFileExtension).ToRelativePath();
+    GetUpdateNotesFileOnHost(string packageName, string locale) => $"notes/{UpdateNotesHelper.GetUpdateNotesFileName(packageName, locale)}.xz".ToRelativePath();
 
     public static Package
     DownloadPackageById(this string packageId, IHostClient client) =>
@@ -85,7 +57,7 @@ public static class PackageHostHelper {
            .DeserializeProto<Package>();
 
     internal static IEnumerable<string>
-    DownloadAllHostedFiles(this IEnumerable<HostedFile> hostedFiles, string outDirectory, IHostClient client) => 
+    DownloadAllHostedFiles(this IEnumerable<PackageProjectionFile> hostedFiles, string outDirectory, IHostClient client) => 
         hostedFiles.AsParallel().Select(x => x.DownloadHostedFile(outDirectory, client));
 
     internal static PackageProjection 
@@ -97,8 +69,8 @@ public static class PackageHostHelper {
         path.DownloadBytes(client).Decompress().DeserializeProto<PackageProjection>();
 
     internal static string
-    DownloadHostedFile(this HostedFile hostedFile, string outDirectory, IHostClient client) =>
-        hostedFile.SubUrl.DownloadFile(client, outDirectory);
+    DownloadHostedFile(this PackageProjectionFile packageProjectionFile, string outDirectory, IHostClient client) =>
+        packageProjectionFile.SubUrl.DownloadFile(client, outDirectory);
 
     internal static string
     DownloadFile(this RelativePath path,  IHostClient client, string outDirectory) {

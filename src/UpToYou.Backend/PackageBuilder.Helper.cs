@@ -14,29 +14,29 @@ internal static class BuilderHelper {
     ToPackageBuildContext(this PackageSpecs packageSpecs, string sourceDirectory, string outputDirectory) =>
         new PackageBuilder(sourceDirectory, outputDirectory, packageSpecs, ImmutableDictionary<string, string>.Empty);
 
-    public static (Package package, string packageFilesDir)
-    BuildPackage(this PackageBuilder ctx){
-        var files = ctx.Specs.GetFilesRelative(ctx.SourceDirectory)
-            .Select<RelativePath, PackageFile>(x => x.ToPackageFile(ctx))
-            .ToDictionary(x => x.Path, x => x);
+    public static (Package package, string packageFilesDirectory)
+    BuildPackage(this PackageBuilder builder){
+        var files = builder.Specs.GetFilesRelative(builder.SourceDirectory)
+            .Select<RelativePath, PackageFile>(x => x.ToPackageFile(builder))
+            .ToImmutableDictionary(x => x.Path, x => x);
         
-        var versionProvider = files.TryGetValue(ctx.Specs.VersionProvider, out var res) ? res : throw new InvalidOperationException($"Version provider package file ({ctx.Specs.VersionProvider}) not found");
+        var versionProvider = files.TryGetValue(builder.Specs.VersionProvider, out var res) ? res : throw new InvalidOperationException($"Version provider package file ({builder.Specs.VersionProvider}) not found");
         return (new Package(
             metadata:new PackageMetadata(
                 id:UniqueId.NewUniqueId(),
-                name:ctx.Specs.PackageName ?? string.Empty,
+                name:builder.Specs.PackageName ?? string.Empty,
                 version: versionProvider.FileVersion ?? throw new InvalidOperationException("Version provider file should have a file version"),
                 datePublished: DateTime.Now,
                 versionProviderFile: versionProvider,
-                customProperties: ctx.Specs.CustomProperties.AddCustomProperties(ctx.CustomProperties, @override:true)),
-            files: files), ctx.OutputDirectory);;
+                customProperties: builder.Specs.CustomProperties.AddCustomProperties(builder.CustomProperties, @override:true)),
+            files: files), builder.OutputDirectory);;
     }
 
     private static PackageFile
-    ToPackageFile(this RelativePath fileSpec, PackageBuilder context) {
+    ToPackageFile(this RelativePath fileSpec, PackageBuilder builder) {
         var outFile = 
-            fileSpec.ToAbsolute(context.SourceDirectory)
-                .CopyFile(context.OutputDirectory.AppendPath(fileSpec));
+            fileSpec.ToAbsolute(builder.SourceDirectory)
+                .CopyFile(builder.OutputDirectory.AppendPath(fileSpec));
 
         return new PackageFile(
             id: UniqueId.NewUniqueId(),
@@ -52,9 +52,9 @@ internal static class BuilderHelper {
                 id: UniqueId.NewUniqueId(),
                 packageId: builder.Package.Id,
                 rootUrl: builder.HostRootUrl,
-                hostedFiles: builder.ProjectionSpecs
+                files: builder.ProjectionSpecs
                     .RetrieveHostedFiles(builder.Package)
-                    .SelectMany(x => x.BuildHostedFiles(builder, allCachedPackages).Where(y => y.RelevantItemsIds.Any())).ToList()).Log(builder),
+                    .SelectMany(x => x.BuildHostedFiles(builder, allCachedPackages).Where(y => y.RelevantItemsIds.Any())).ToImmutableList()).Log(builder),
             builder.OutputDirectory);
 
     //It is possible that some package files are not included into the projection specs by the user.
@@ -79,32 +79,32 @@ internal static class BuilderHelper {
             yield return new PackageProjectionFileSpec(remainingFiles.Select(x => x.ToRelativeGlob()).ToList());
     }
 
-    private static IEnumerable<HostedFile>
-    BuildHostedFiles(this PackageProjectionFileSpec fileSpec, ProjectionBuilder ctx, List<Package>? allCachedPackages = null) {
-        yield return fileSpec.Content.Select(x => ctx.Package.GetFiles(x)).NotNull().SelectMany(x => x).Select(x => x.Id).ToList().PackItems(ctx);
+    private static IEnumerable<PackageProjectionFile>
+    BuildHostedFiles(this PackageProjectionFileSpec fileSpec, ProjectionBuilder builder, List<Package>? allCachedPackages = null) {
+        yield return fileSpec.Content.Select(x => builder.Package.GetFiles(x)).NotNull().SelectMany(x => x).Select(x => x.Id).ToList().PackItems(builder);
 
         if (fileSpec.HostDeltas && fileSpec.MaxHostDeltas > 0)
-            foreach (var buildDelta in BuildDeltas(fileSpec, ctx, allCachedPackages) )
+            foreach (var buildDelta in BuildDeltas(fileSpec, builder, allCachedPackages) )
                 yield return buildDelta;
     }
 
-    private static HostedFile
-    PackItems(this List<string> packageItemsIds, ProjectionBuilder builder) {
+    private static PackageProjectionFile
+    PackItems(this IList<string> packageItemsIds, ProjectionBuilder builder) {
         var resultFile = packageItemsIds
             .Select(x => builder.Package.GetFileById(x).GetFile(builder.SourceDirectory))
             .ArchiveFiles(builder.SourceDirectory, builder.OutputDirectory.CreateDirectoryIfAbsent().AppendPath(UniqueId.NewUniqueId()))
             .CompressFile()
             .ReplaceFileNameByHash();
 
-        return new HostedFile(
+        return new PackageProjectionFile(
             id: UniqueId.NewUniqueId(),
             subUrl:resultFile.GetPathRelativeTo(builder.OutputDirectory).ToHostedFileSubUrlOnHost(),
             fileHash:resultFile.GetFileNameUntilDot(),
             fileSize:resultFile.GetFileSize(),
-            content:new PackageItemsHostedFileContent(packageItemsIds)).Log(builder);
+            content:new PackageProjectionFileContent(packageItemsIds.ToImmutableList())).Log(builder);
     }
 
-    private static IEnumerable<HostedFile>
+    private static IEnumerable<PackageProjectionFile>
     BuildDeltas(this PackageProjectionFileSpec fileSpec, ProjectionBuilder builder, List<Package>? allCachedPackages = null) {
         var packages = (allCachedPackages ?? builder.Host.DownloadAllPackages())
             .Where(x => x.Metadata.Name == builder.Package.Metadata.Name && x.Metadata.Version != builder.Package.Metadata.Version).ToList();
@@ -115,7 +115,7 @@ internal static class BuilderHelper {
         return packages.Select(x => BuildDelta(fileSpec, x, builder));
     }
 
-    private static HostedFile
+    private static PackageProjectionFile
     BuildDelta(PackageProjectionFileSpec spec, Package oldPackage, ProjectionBuilder builder) {
         if (oldPackage.Id == builder.Package.Id)
             throw new InvalidOperationException("Can't built delta for self package");
@@ -130,7 +130,7 @@ internal static class BuilderHelper {
         
         //Downloading required oldPackage files from the host
         oldProjection
-            .DownloadHostedFiles(builder.Host, oldFilesIds, builder.OutputDirectory)
+            .DownloadProjectionFiles(builder.Host, oldFilesIds, builder.OutputDirectory)
             .ExtractAllHostedFiles(builder.OutputDirectory.AppendPath(oldProjection.Id));
 
         (string packageFileId, string fromFile, string toFile) 
@@ -150,12 +150,12 @@ internal static class BuilderHelper {
             .ArchiveFiles(builder.OutputDirectory, UniqueId.NewUniqueId().ToAbsoluteFilePath(builder.OutputDirectory).CreateParentDirectoryIfAbsent())
             .ReplaceFileNameByHash();
 
-        return new HostedFile(
+        return new PackageProjectionFile(
             id: UniqueId.NewUniqueId(),
             subUrl: deltasFilesArchive.GetPathRelativeTo(builder.OutputDirectory).ToDeltasSubUrlOnHost(),
             fileHash:deltasFilesArchive.GetFileNameUntilDot(),
             fileSize:deltasFilesArchive.GetFileSize(),
-            content: new PackageFileDeltasHostedFileContent(deltas.MapToList(x => x.delta))).Log(builder);
+            content: new PackageProjectionFileDeltaContent(deltas.MapToImmutableList(x => x.delta))).Log(builder);
     }
 
 
@@ -176,7 +176,7 @@ internal static class BuilderHelper {
         var delta = new PackageFileDelta(
             oldHash:oldHash,
             newHash:newHash,
-            packageItemId:@in.packageFileId);
+            packageFileId:@in.packageFileId);
 
         if ( packageFrom != null) {
             var oldFile = packageFrom.TryGetFileById(@in.packageFileId);
@@ -196,20 +196,20 @@ internal static class BuilderHelper {
     private static string
     ReplaceFileNameByHash(this string file) => file.ReplaceInFileName(file.GetFileNameUntilDot(), file.GetFileHash());
 
-    private static HostedFile 
-    Log(this HostedFile hostedFile, ProjectionBuilder builder) {
-        if (hostedFile.Content is PackageFileDeltasHostedFileContent deltasContent) {
-            builder.Logger.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {deltasContent.PackageFileDeltas.Count} deltas.");
-            builder.Logger.LogDebug(deltasContent.PackageFileDeltas.Aggregate(string.Empty, (s,x) => s + builder.Package.GetFileById(x.PackageItemId).Path.Value + "\n"));
+    private static PackageProjectionFile 
+    Log(this PackageProjectionFile packageProjectionFile, ProjectionBuilder builder) {
+        if (packageProjectionFile.Content is PackageProjectionFileDeltaContent deltasContent) {
+            builder.Logger.LogInformation($"Hosted file of size {packageProjectionFile.FileSize.BytesToMegabytes()} mb has been built with {deltasContent.PackageFileDeltas.Count} deltas.");
+            builder.Logger.LogDebug(deltasContent.PackageFileDeltas.Aggregate(string.Empty, (s,x) => s + builder.Package.GetFileById(x.PackageFileId).Path.Value + "\n"));
         }
-        else if (hostedFile.Content is PackageItemsHostedFileContent itemsContent)
-            builder.Logger.LogInformation($"Hosted file of size {hostedFile.FileSize.BytesToMegabytes()} mb has been built with {itemsContent.PackageItems.Count} files.");
-        return hostedFile;
+        else if (packageProjectionFile.Content is PackageProjectionFileContent itemsContent)
+            builder.Logger.LogInformation($"Hosted file of size {packageProjectionFile.FileSize.BytesToMegabytes()} mb has been built with {itemsContent.PackageFileIds.Count} files.");
+        return packageProjectionFile;
     }
 
     private static PackageProjection 
     Log(this PackageProjection projection, ProjectionBuilder builder) {
-        builder.Logger?.LogInformation($"Projection {projection.PackageId.GetPackageProjectionFileOnHost()} has been built with {projection.HostedFiles.Count} hosted files.");
+        builder.Logger?.LogInformation($"Projection {projection.PackageId.GetPackageProjectionFileOnHost()} has been built with {projection.Files.Count} hosted files.");
         return projection;
     }
 }

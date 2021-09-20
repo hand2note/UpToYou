@@ -18,74 +18,64 @@ IHost: IHostClient {
 }
 
 public static class
-HostHelper {
+HostServerHelper {
     
     public static bool 
     UpdateManifestFileExists(this IHost host) => 
-        host.FileExists(PackageHostHelper.UpdatesManifestPathOnHost);
+        host.FileExists(HostHelper.UpdatesManifestPathOnHost);
     
-    public static bool 
-    TryDownloadUpdateManifest(this IHost host, [NotNullWhen(true)] out UpdatesManifest? result) {
-        result = host.DownloadUpdatesManifestIfExists();
-        return result != null;
-    }
-    
-    public static bool
-    IsPackageFile(this string file) => file.FileContainsExtension(PackageHostHelper.PackageExtension);
-
-    public static bool
-    IsPackageProjectionFile(this string file) => file.FileContainsExtension(PackageHostHelper.ProjectionExtension);
-
     public static void
-    Upload(this UpdatesManifest manifest, IHost host) =>
+    UploadUpdateManifest(this UpdatesManifest manifest, IHost host) =>
         host.UploadBytes(
-            path: PackageHostHelper.UpdatesManifestPathOnHost,
-            bytes:manifest.ProtoSerializeToBytes().Compress());
+            path: HostHelper.UpdatesManifestPathOnHost,
+            bytes: manifest.ProtoSerializeToBytes().Compress());
 
     public static UpdatesManifest? 
     DownloadUpdatesManifestIfExists(this IHost host) =>
-        host.FileExists(PackageHostHelper.UpdatesManifestPathOnHost) ? host.DownloadUpdatesManifest() : null;
+        host.FileExists(Core.HostHelper.UpdatesManifestPathOnHost) ? host.DownloadUpdatesManifest() : null;
 
     internal static List<Package>
     DownloadAllPackages(this IHost host) =>
         host
-           .GetAllFiles(PackageHostHelper.AllPackagesGlobPattern)
+           .GetAllFiles(Core.HostHelper.AllPackagesGlobPattern)
            .AsParallel()
-           .Select(x => x.DownloadPackage(host)).Where(x => x != null).ToList();
+           .Select(x => x.DownloadPackage(host)).ToList();
 
     internal static List<PackageProjection>
     DownloadAllProjections(this IHost host) =>
         host
-           .GetAllFiles(PackageHostHelper.AllProjectionsGlobalPattern)
+           .GetAllFiles(HostHelper.AllProjectionsGlobalPattern)
            .AsParallel()
            .Select(x => x.DownloadProjection(host)).ToList();
 
     ///Downloads hosted files containing all items in filesIds. Doesn't download deltas.
     internal static List<string>
-    DownloadHostedFiles(this PackageProjection projection, IHost host, List<string> filesIds, string outDirectory) {
-        var relevantHostedFiles = projection.HostedFiles.Where(x => x.RelevantItemsIds.Intersect(filesIds).Any()).ToList();
+    DownloadProjectionFiles(this PackageProjection projection, IHost host, List<string> fileIds, string outDirectory) {
+        var relevantHostedFiles = projection.Files.Where(x => x.RelevantItemsIds.Intersect(fileIds).Any()).ToList();
         if (relevantHostedFiles.Count == 0)
             throw new InvalidOperationException("Given files to download not found in the hosted package");
         
         relevantHostedFiles = FilterHostedFiles(relevantHostedFiles).ToList();
         return relevantHostedFiles.AsParallel().Select(x => x.SubUrl.DownloadFile(host, outDirectory)).ToList();
 
-        IEnumerable<HostedFile>
-        FilterHostedFiles(IList<HostedFile> hostedFiles) {
+        IEnumerable<PackageProjectionFile>
+        FilterHostedFiles(IList<PackageProjectionFile> hostedFiles) {
+            return hostedFiles.Where(Filter);
             
-            bool IsItemRelevant(string itemId) => filesIds.Contains(itemId);
-
-            // ReSharper disable once VariableHidesOuterVariable
-            bool ContainsAllFiles(HostedFile hostedFile,List<string> filesIds) => filesIds.All(x => hostedFile.RelevantItemsIds.Contains(x));
-
-            bool Filter(HostedFile hostedFile) {
+            bool 
+            Filter(PackageProjectionFile hostedFile) {
                 var relevantFiles = GetRelevantFiles(hostedFile);
                 return !hostedFiles.TakeUntil(x => x == hostedFile).NotEqual(hostedFile).Any(x => ContainsAllFiles(x, relevantFiles));
             }
-
-            List<string> GetRelevantFiles(HostedFile hostedFile) => hostedFile.RelevantItemsIds.Where(IsItemRelevant).ToList();
-
-            return hostedFiles.Where(Filter);
+            
+            List<string> 
+            GetRelevantFiles(PackageProjectionFile hostedFile) => hostedFile.RelevantItemsIds.Where(IsItemRelevant).ToList();
+            
+            bool 
+            ContainsAllFiles(PackageProjectionFile hostedFile,List<string> filesIds) => filesIds.All(x => hostedFile.RelevantItemsIds.Contains(x));
+            
+            bool 
+            IsItemRelevant(string itemId) => fileIds.Contains(itemId);
         }
     }
 
@@ -109,7 +99,7 @@ HostHelper {
         @in.projection.UploadProjectionManifest(host);
 
         var hostedFilesToUpload = @in.projection
-            .HostedFiles
+            .Files
             .Where(x => !host.GetAllFiles().Contains(x.SubUrl)).ToList();
 
         hostedFilesToUpload.ForEach(x => host.UploadFile(x.SubUrl, x.SubUrl.Value.GetFileName().ToAbsoluteFilePath(@in.sourceDir).VerifyFileExistence())); 
@@ -130,10 +120,10 @@ HostHelper {
 
         var allProjectionsFiles = host.DownloadAllProjections()
             .NotEqualById(projection)
-            .SelectMany(x => x.HostedFiles)
+            .SelectMany(x => x.Files)
             .Select(x => x.SubUrl.Value).Distinct().ToList();
 
-        foreach (var hostedFile in projection.HostedFiles)
+        foreach (var hostedFile in projection.Files)
             if (!allProjectionsFiles.Contains(hostedFile.SubUrl.Value))
                 host.RemoveFiles(hostedFile.SubUrl.Value);
 
@@ -144,24 +134,16 @@ HostHelper {
         var updatesManifest = host.DownloadUpdatesManifestIfExists();
         if (updatesManifest != null) {
             update(updatesManifest);
-            updatesManifest.Upload(host);
+            updatesManifest.UploadUpdateManifest(host);
         }
     }
 
     internal static void
-    UploadUpdateNotesUtf8(this string updateNotesUtf8, string packageName, string locale, IHost host) => 
-        updateNotesUtf8.Utf8ToBytes().UploadUpdateNotesUtf8(packageName, locale, host);
-
-    internal static void
     UploadUpdateNotesUtf8(this byte[] updateNotesUtf8, string packageName, string locale, IHost host) => 
-        host.UploadBytes(PackageHostHelper.GetUpdateNotesFileOnHost(packageName, locale), updateNotesUtf8.Compress());
+        host.UploadBytes(Core.HostHelper.GetUpdateNotesFileOnHost(packageName, locale), updateNotesUtf8.Compress());
     
     public static List<RelativePath>
     GetAllFiles(this IHost host) => host.GetAllFiles("**/*");
-
-    public static async Task 
-    UploadFileAsync(this IHost host, RelativePath path, Stream inStream) =>
-        await Task.Run(() => host.UploadFile(path, inStream));
 
     public static void 
     UploadFile(this IHost host,RelativePath path, string sourceFile) {

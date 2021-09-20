@@ -76,11 +76,11 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
         return Updater.UpdateFilesDirectory; 
     }
 
-    private static HashSet<HostedFile>
-    GetSmallestHostedFilesSet(this List<List<HostedFile>> itemsFiles) {
+    private static HashSet<PackageProjectionFile>
+    GetSmallestHostedFilesSet(this List<List<PackageProjectionFile>> itemsFiles) {
         //Ideally here should be a recursive algorithm to find the smallest possible set of hosted files. But it is too complicated for now.
         //So here is the simple one
-        var result = new HashSet<HostedFile>(itemsFiles.Where(x => x.Count == 1).Select(x => x[0]).Distinct());
+        var result = new HashSet<PackageProjectionFile>(itemsFiles.Where(x => x.Count == 1).Select(x => x[0]).Distinct());
 
         foreach (var itemFiles in itemsFiles.Where(x => x.Count > 1)) {
             if (result.ContainsAny(itemFiles))
@@ -89,13 +89,13 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
         return result; 
     }
 
-    private static HostedFile
-    SmallestFile(this IEnumerable<HostedFile> hostedFiles) => hostedFiles.MinBy(x => x.FileSize);
+    private static PackageProjectionFile
+    SmallestFile(this IEnumerable<PackageProjectionFile> hostedFiles) => hostedFiles.MinBy(x => x.FileSize);
 
-    private static IEnumerable<List<HostedFile>>
+    private static IEnumerable<List<PackageProjectionFile>>
     GetFilesToDownload(this PackageDifference difference, PackageProjection projection) {
         //Probably will be faster to cache relevant hosted files in advance
-        var relevantHostedFiles = projection.HostedFiles.Where(x => x.RelevantItemsIds.ContainsAny(difference.DifferentFilesIds)).ToList();
+        var relevantHostedFiles = projection.Files.Where(x => x.RelevantItemsIds.ContainsAny(difference.DifferentFilesIds)).ToList();
 
         foreach (var fileDifference in difference.DifferentFiles) {
             var hostedFiles = !fileDifference.ActualFileState.Exists
@@ -106,20 +106,20 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
             yield return hostedFiles; } 
     }
 
-    private static IEnumerable<HostedFile>
-    FindFullHostedFile(string packageItemId, IEnumerable<HostedFile> relevantHostedFiles) {
+    private static IEnumerable<PackageProjectionFile>
+    FindFullHostedFile(string packageItemId, IEnumerable<PackageProjectionFile> relevantHostedFiles) {
         foreach (var hostedFile in relevantHostedFiles)
-            if (hostedFile.Content is PackageItemsHostedFileContent content)
-                if (content.PackageItems.Contains(packageItemId))
+            if (hostedFile.Content is PackageProjectionFileContent content)
+                if (content.PackageFileIds.Contains(packageItemId))
                     yield return hostedFile; 
     }
 
-    private static IEnumerable<HostedFile>
-    FindDeltaHostedFile(PackageFileDifference fileDifference, IEnumerable<HostedFile> relevantHostedFiles) {
+    private static IEnumerable<PackageProjectionFile>
+    FindDeltaHostedFile(PackageFileDifference fileDifference, IEnumerable<PackageProjectionFile> relevantHostedFiles) {
         foreach (var hostedFile in relevantHostedFiles)
-            if (hostedFile.Content is PackageFileDeltasHostedFileContent deltaContent) {
+            if (hostedFile.Content is PackageProjectionFileDeltaContent deltaContent) {
                 var delta = deltaContent.PackageFileDeltas.FirstOrDefault(x =>
-                    x.PackageItemId == fileDifference.PackageItemId &&
+                    x.PackageFileId == fileDifference.PackageItemId &&
                     x.OldHash == fileDifference.ActualFileState.Hash &&
                     x.NewHash == fileDifference.PackageFile.FileHash);
 
@@ -231,8 +231,8 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
             ?? throw new InvalidOperationException($"No file found in the update files directory for different package file {difference.PackageFile.Path}");
 
     internal static void
-    PrepareForRunner(this PackageFileDifference fileDifference, Updater ctx, Dictionary<string, string> fileHashToPath) {
-        var runnerDirectory = ctx.UpdateFilesDirectory.AppendPath(RunnerSourcesSubDirectory).CreateDirectoryIfAbsent();
+    PrepareForRunner(this PackageFileDifference fileDifference, Updater updater, Dictionary<string, string> fileHashToPath) {
+        var runnerDirectory = updater.UpdateFilesDirectory.AppendPath(RunnerSourcesSubDirectory).CreateDirectoryIfAbsent();
         
         if (!fileHashToPath.TryGetValue(fileDifference.PackageFile.FileHash, out var updateFile))
             throw new InvalidOperationException(
@@ -245,11 +245,11 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
             
             fileDifference.ActualFileState.Path.CopyFile(fileForRunner);
             fileForRunner.ApplyDelta(updateFile);
-            ctx.Logger.LogDebug($"{fileDifference.PackageFile.Path} copied to the runner's source directory and applied delta to.");
+            updater.Logger.LogDebug($"{fileDifference.PackageFile.Path} copied to the runner's source directory and applied delta to.");
         }
         else {
             updateFile.CopyFile(fileForRunner);
-            ctx.Logger.LogDebug($"File copied to {fileForRunner}");
+            updater.Logger.LogDebug($"File copied to {fileForRunner}");
         }
     }
 

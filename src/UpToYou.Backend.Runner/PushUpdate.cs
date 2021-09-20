@@ -18,8 +18,8 @@ public class PushUpdateOptions: IFilesHostOptions {
        "May not be specified and will be taken from the package specs in this case.")]
     public string? VersionProvider { get; set; }
 
-    [Option(HelpText = "Path to the package specifications file.")]
-    public string? PackageSpecsFile { get;set;  }
+    [Option(HelpText = "Path to the package specifications file.", Required = true)]
+    public string PackageSpecsFile { get;set;  }
 
     [Option(HelpText = "Path to the package projection specifications file.")]
     public string? ProjectionSpecsFile { get;set; }
@@ -94,11 +94,7 @@ PushUpdateHelper {
         var packageBuilder = new PackageBuilder(
             sourceDirectory:options.SourceDirectory,
             outputDirectory:packageDirectory,
-            specs:options.PackageSpecsFile?.ReadAllFileText().Trim().ParsePackageSpecsFromYaml() 
-                  ?? options.SourceDirectory
-                        .EnumerateDirectoryRelativeFiles()
-                        .FilesToPackageSpecs(options.VersionProvider?.ToRelativePath() 
-                            ?? throw new InvalidOperationException($"VersionProvider should be specified in case of package specs are not specified.")),
+            specs:options.PackageSpecsFile.ReadAllFileText().Trim().ParsePackageSpecsFromYaml(),
             customProperties:options.PackageCustomProperties?.ToCustomProperties()??ImmutableDictionary<string, string>.Empty);
 
         var (package, _) = packageBuilder.BuildPackage();
@@ -149,7 +145,7 @@ PushUpdateHelper {
                 ? host.DownloadUpdatesManifest().AddOrChangeUpdate(package.Metadata)
                 : new UpdatesManifest(package.Metadata.ToSingleImmutableList());
                     
-            updateManifest.Upload(host);
+            updateManifest.UploadUpdateManifest(host);
         }
 
         //Upload update notes

@@ -72,11 +72,11 @@ internal static class UpdaterTestContextEx {
     MockClientDirectory(this string directory, UpdaterTestContext ctx) =>
         directory.GetAllDirectoryFiles().MockClientFiles(directory, ctx);
 
-    internal static (Package package, string packageFilesDir)
+    internal static (Package package, string packageFilesDirectory)
     BuildTestPackage(this (PackageSpecs specs, Version version, string sourceDirectory) @in, UpdaterTestContext ctx) =>
         @in.specs.BuildTestPackage(@in.version, @in.sourceDirectory, ctx);
 
-    internal static (Package package, string packageFilesDir)
+    internal static (Package package, string packageFilesDirectory)
     BuildTestPackage(this PackageSpecs specs, Version version, string packageFilesSrcDir, UpdaterTestContext ctx) {
         
         specs.GetFiles(packageFilesSrcDir)

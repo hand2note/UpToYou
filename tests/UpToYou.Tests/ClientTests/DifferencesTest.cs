@@ -10,14 +10,14 @@ public class DifferencesTest {
     public void Package_built_on_the_same_files_should_not_be_different() {
     
         //Arrange
-        using var ctx = new UpdaterTestContext();
+        using var updater = new UpdaterTestContext();
         var clientVersion = TestData.AnyH2nNonRootVersion;
         var clientSrc = clientVersion.GetH2nUpdateDirectory();
-        TestData.H2nTestPackageSpecs.GetFiles(clientSrc).MockClientFiles(clientSrc, ctx);
-        var package = TestData.H2nTestPackageSpecs.BuildTestPackage(clientVersion, clientSrc, ctx).package;
+        TestData.H2nTestPackageSpecs.GetFiles(clientSrc).MockClientFiles(clientSrc, updater);
+        var package = TestData.H2nTestPackageSpecs.BuildTestPackage(clientVersion, clientSrc, updater).package;
 
         //Act
-        var actual = package.GetDifference(ctx.ClientDirectory);
+        var actual = package.GetDifference(updater.ClientDirectory);
 
         //Assert 
         Assert.IsFalse(actual.IsDifferent());
