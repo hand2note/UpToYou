@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using UpToYou.Core;
 
 namespace UpToYou.Client {
@@ -23,6 +24,9 @@ Updater {
         Logger = logger;
         Options = options;
     }
+    
+    public static Updater 
+    Default(IHostClient host) => new (host, NullLogger.Instance, UpdaterOptions.Default);
 
     public string ProgramDirectory => Options.ProgramDirectory;
     public string UpdateFilesDirectory => Options.UpdateFilesDirectory;

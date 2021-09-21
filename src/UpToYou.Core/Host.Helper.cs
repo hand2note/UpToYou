@@ -37,6 +37,13 @@ public static class HostHelper {
             .SelectMany(x => host.DownloadUpdateNotes(x, locale)
                 .ParseUpdateNotes()
                 .Select(y => new UpdateNotes(x, y.version, y.notes))).ToList();
+    
+    public static List<UpdateNotes>
+    DownloadUpdateNotes(this IHostClient host, IEnumerable<string> packageNames, string locale) =>
+        packageNames.AsParallel()
+            .SelectMany(x => host.DownloadUpdateNotes(x, locale)
+                .ParseUpdateNotes()
+                .Select(y => new UpdateNotes(x, y.version, y.notes))).ToList();
 
     public static string
     DownloadUpdateNotes(this IHostClient client, string packageName, string locale) => 

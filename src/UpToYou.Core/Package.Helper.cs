@@ -35,5 +35,8 @@ public static class PackageHelper {
         if (packageFile.FileVersion == null || path.GetFileVersion() != packageFile.FileVersion)
             throw new InvalidOperationException($"Expected {packageFile.FileVersion} of {packageFile.Path.Value.Quoted()} but was {path.GetFileVersion()?.ToString().Quoted()}");
     }
+    
+    public static IEnumerable<PackageMetadata>
+    OrderByVersion(this IEnumerable<PackageMetadata> packages) => packages.OrderByDescending(x => x.Version);
 }
 }
