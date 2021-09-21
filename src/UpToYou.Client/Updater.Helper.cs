@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,21 @@ using UpToYou.Core;
 namespace UpToYou.Client {
 public static class UpdaterHelper {
     
-public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
+    public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
+    
+    public static bool
+    TryGetInstalledVersion(this UpdatesManifest manifest, string packageName, string programDirectory, [NotNullWhen(true)] out Version? result) {
+        if (manifest.GetPackageHeaders(packageName).OrderByVersion().TryGet(x => x.IsInstalled(programDirectory), out var resultPackage)) {
+            result = resultPackage.Version;
+            return true;
+        }
+        if (!manifest.GetPackageHeaders(packageName).OrderByVersion().TryGet(x => x.VersionProviderFile.GetFile(programDirectory).FileExists(), out var package)) {
+            result = default;
+            return false;
+        }
+        result = package.VersionProviderFile.GetFile(programDirectory).GetFileVersion();
+        return result != null;
+    }
 
     public static IEnumerable<PackageHeader>
     GetNewUpdates(this IEnumerable<PackageHeader> packages, Updater updater) {
