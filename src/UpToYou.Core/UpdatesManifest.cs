@@ -19,6 +19,10 @@ UpdatesManifest {
     public IEnumerable<PackageHeader> Packages => PackagesByDate;
     protected UpdatesManifest() => PackagesByDate = ImmutableList<PackageHeader>.Empty;
     
+    public PackageHeader
+    GetPackageHeader(string packageId) => 
+        Packages.TryGet(x => x.Id == packageId, out var result) ? result : throw new InvalidOperationException($"Package with id = {packageId} not found in the manifest");
+    
     public bool 
     TryGetPackage(string packageName, Version version, out PackageHeader result) => 
         Packages.TryGet(package => package.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase) && version.Equals(package.Version), out result);
