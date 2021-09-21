@@ -42,6 +42,8 @@ UpdatesManifestHelper {
         return manifest;
     }
     
-
+    public static IEnumerable<PackageHeader>
+    GetPackageHeaders(this UpdatesManifest manifest, string packageName) =>
+        manifest.Packages.Where(x => x.Name == packageName);
 }
 }
