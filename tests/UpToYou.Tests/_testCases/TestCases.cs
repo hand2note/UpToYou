@@ -9,7 +9,7 @@ using UpToYou.Tests.UpdateTestCases;
 
 namespace UpToYou.Tests {
 
-public interface IPackageMetadataTestCase {
+public interface IPackageHeaderTestCase {
     string PackageName { get; }
     DateTime? DateBuilt { get; }
     Dictionary<string, string>? CustomProperties { get; }
@@ -19,7 +19,7 @@ public interface IPackageMetadataTestCase {
 internal interface IPackageTestCase {
     string SourceDirectory { get; }
     PackageSpecs? PackageSpecs { get; }
-    IPackageMetadataTestCase PackageMetadata { get; }
+    IPackageHeaderTestCase PackageHeader { get; }
 }
 
 internal interface IProjectionTestCase {
@@ -93,7 +93,7 @@ internal static class TestCasesHelper {
 
     internal static PackageSpecs GetPackageSpecs(this IPackageTestCase test) =>
         test.PackageSpecs 
-        ?? test.SourceDirectory.EnumerateDirectoryRelativeFiles().FilesToPackageSpecs(test.PackageMetadata.VersionProvider 
+        ?? test.SourceDirectory.EnumerateDirectoryRelativeFiles().FilesToPackageSpecs(test.PackageHeader.VersionProvider 
             ?? throw new InvalidTestDataException("Version provider can't be null if PackageSpecs are not specified"));
 }
 

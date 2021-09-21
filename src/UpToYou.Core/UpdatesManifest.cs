@@ -11,16 +11,16 @@ namespace UpToYou.Core {
 public class 
 UpdatesManifest {
     
-    [ProtoMember(1)] public ImmutableList<PackageMetadata> PackagesByDate { get; }
-    public UpdatesManifest(IList<PackageMetadata> packages) {
+    [ProtoMember(1)] public ImmutableList<PackageHeader> PackagesByDate { get; }
+    public UpdatesManifest(IList<PackageHeader> packages) {
         PackagesByDate = packages.OrderByDescending(x => x.DatePublished).ToImmutableList();
     }
 
-    public IEnumerable<PackageMetadata> Packages => PackagesByDate;
-    protected UpdatesManifest() => PackagesByDate = ImmutableList<PackageMetadata>.Empty;
+    public IEnumerable<PackageHeader> Packages => PackagesByDate;
+    protected UpdatesManifest() => PackagesByDate = ImmutableList<PackageHeader>.Empty;
     
     public bool 
-    TryGetPackage(string packageName, Version version, out PackageMetadata result) => 
+    TryGetPackage(string packageName, Version version, out PackageHeader result) => 
         Packages.TryGet(package => package.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase) && version.Equals(package.Version), out result);
 }
 
@@ -31,10 +31,10 @@ UpdatesManifestHelper {
     RemovePackage(this UpdatesManifest manifest, string packageId) => new (manifest.PackagesByDate.RemoveAll(x => x.Id == packageId));
     
     public static UpdatesManifest
-    AddPackage(this UpdatesManifest manifest, PackageMetadata package) => new(manifest.PackagesByDate.Add(package));
+    AddPackage(this UpdatesManifest manifest, PackageHeader package) => new(manifest.PackagesByDate.Add(package));
     
     public static UpdatesManifest 
-    AddOrChangeUpdate(this UpdatesManifest manifest, PackageMetadata package) {
+    AddOrChangeUpdate(this UpdatesManifest manifest, PackageHeader package) {
         if (manifest.Packages.TryGet(x => x.IsSamePackage(package), out var existingPackage))
             manifest.RemovePackage(existingPackage.Id);
                 

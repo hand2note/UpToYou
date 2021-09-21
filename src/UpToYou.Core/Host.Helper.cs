@@ -32,7 +32,7 @@ public static class HostHelper {
     GetPathOnHost(this PackageProjection projection) => projection.PackageId.GetPackageProjectionFileOnHost();
 
     public static List<UpdateNotes>
-    DownloadUpdateNotes(this List<PackageMetadata> packages, string locale, IHostClient host) =>
+    DownloadUpdateNotes(this List<PackageHeader> packages, string locale, IHostClient host) =>
         packages.AsParallel().Select(x => x.Name).Distinct()
             .SelectMany(x => host.DownloadUpdateNotes(x, locale)
                 .ParseUpdateNotes()

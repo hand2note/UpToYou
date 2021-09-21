@@ -6,7 +6,7 @@ using UpToYou.Core;
 
 namespace UpToYou.Tests
 {
-    public class Pmtc_h2n: IPackageMetadataTestCase
+    public class Pmtc_h2n: IPackageHeaderTestCase
     {
         public Pmtc_h2n( string packageName, DateTime? dateBuilt = null, Dictionary<string, string>? customProperties = null, RelativePath? versionProvider = null) {
             DateBuilt = dateBuilt;
@@ -26,7 +26,7 @@ internal class Ptc_h2n : IPackageTestCase {
     public const string NeverChangingFile = "System.Threading.Tasks.Extensions.dll";
     public Ptc_h2n(string version) {
         SourceDirectory = version.ParseVersion().GetH2nRootDirectory();
-        PackageMetadata = new Pmtc_h2n("Hand2Note");
+        PackageHeader = new Pmtc_h2n("Hand2Note");
         PackageSpecs = new [] {
             "Hand2Note.exe", 
             "Hand2NoteCore.dll",
@@ -36,7 +36,7 @@ internal class Ptc_h2n : IPackageTestCase {
 
     public string SourceDirectory { get; }
     public PackageSpecs? PackageSpecs { get; }
-    public IPackageMetadataTestCase PackageMetadata { get; }
+    public IPackageHeaderTestCase PackageHeader { get; }
 }
 
 internal class Pjtc_h2n: IProjectionTestCase {

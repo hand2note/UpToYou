@@ -9,12 +9,12 @@ namespace UpToYou.Tests {
 [DebuggerDisplay("{DirMock.Root}")]
 public class UpdaterTestContext: IDisposable
 {
-    public DirectoryMockContext DirMock { get; }
+    public DirectoryMock DirMock { get; }
     public IHost Host { get; }
 
     public UpdaterTestContext(string? prefix = null) {
 
-        DirMock = DirectoryMock.Create(prefix);
+        DirMock = DirectoryMockHelper.Create(prefix);
         SourcesDirMock = "sources".CreateSubDirectoryMock(DirMock);
         //sourceFiles.MockFiles(baseDir, SourcesDirMock);
         PackagesDirMock = "packages".CreateSubDirectoryMock(DirMock);
@@ -23,10 +23,10 @@ public class UpdaterTestContext: IDisposable
         Host = new LocalHost(DirMock.Root);
     }
 
-    public DirectoryMockContext SourcesDirMock { get; }
-    public DirectoryMockContext PackagesDirMock { get; }
-    public DirectoryMockContext ProjectionsDirMock { get; }
-    public DirectoryMockContext ClientDirMock { get; }
+    public DirectoryMock SourcesDirMock { get; }
+    public DirectoryMock PackagesDirMock { get; }
+    public DirectoryMock ProjectionsDirMock { get; }
+    public DirectoryMock ClientDirMock { get; }
 
     public List<Version> BuiltProjections = new List<Version>();
     public bool IsPackageProjectionAlreadyBuilt(Version version) => BuiltProjections.Contains(version);
@@ -106,7 +106,7 @@ internal static class UpdaterTestContextEx {
             hostRootUrl:ctx.DirMock.Root,
            logger:null);
 
-        ctx.BuiltProjections.Add(@in.package.Metadata.Version);
+        ctx.BuiltProjections.Add(@in.package.Header.Version);
 
         return projCtx.BuildProjection();
     }

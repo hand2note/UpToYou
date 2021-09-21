@@ -5,70 +5,70 @@ using UpToYou.Core;
 namespace UpToYou.Tests {
 
 public class
-DirectoryMockContext: IDisposable {
+DirectoryMock: IDisposable {
     public string Root { get; }
 
-    public DirectoryMockContext(string root) => Root = root;
+    public DirectoryMock(string root) => Root = root;
     public void Dispose() => Root.RemoveDirectory();
 }
 
 public static class 
-DirectoryMock{
+DirectoryMockHelper{
 
     public const int RandomNameLength = 4;
-    public static DirectoryMockContext Create(string? prefix = null) => 
-        new DirectoryMockContext(Environment.CurrentDirectory.AppendPath(prefix+ UniqueId.NewUniqueId(RandomNameLength)).CreateDirectory());
+    public static DirectoryMock Create(string? prefix = null) => 
+        new DirectoryMock(Environment.CurrentDirectory.AppendPath(prefix+ UniqueId.NewUniqueId(RandomNameLength)).CreateDirectory());
 
     public static string 
-    CreateRandomSubDirectory(this DirectoryMockContext updater) => 
+    CreateRandomSubDirectory(this DirectoryMock updater) => 
         UniqueId.NewUniqueId(RandomNameLength).ToAbsoluteMockPath(updater).VerifyDirectoryAbsent().CreateDirectory();
 
     public static string
-    CreateMockedSubDirectory(this string dir, DirectoryMockContext updater) {
+    CreateMockedSubDirectory(this string dir, DirectoryMock updater) {
         var newDir = dir.ToAbsoluteFilePath(updater.Root);
         if (newDir.DirectoryExists()) 
             throw new InvalidOperationException($"Mocked sub directory {newDir.Quoted()} already exists");
         return newDir.CreateDirectory();
     }
 
-    public static DirectoryMockContext
-    CreateSubDirectoryMockIfAbsent(this string dir, DirectoryMockContext ctx) {
+    public static DirectoryMock
+    CreateSubDirectoryMockIfAbsent(this string dir, DirectoryMock ctx) {
         var newDir = ctx.Root.AppendPath(dir);
-        return new DirectoryMockContext(newDir.CreateDirectoryIfAbsent());
+        return new DirectoryMock(newDir.CreateDirectoryIfAbsent());
     }
 
     public static string
-    CreateSubDirectory(this DirectoryMockContext ctx, string subDir) => subDir.CreateSubDirectoryMock(ctx).Root;
+    CreateSubDirectory(this DirectoryMock ctx, string subDir) => subDir.CreateSubDirectoryMock(ctx).Root;
 
-    public static DirectoryMockContext
-    CreateSubDirectoryMock(this string dir, DirectoryMockContext ctx) {
+    public static DirectoryMock
+    CreateSubDirectoryMock(this string dir, DirectoryMock ctx) {
         var newDir = ctx.Root.AppendPath(dir);
         if (newDir.DirectoryExists())
             throw new InvalidOperationException($"Mocked sub directory {newDir.Quoted()} already exists");
-        return new DirectoryMockContext(newDir.CreateDirectory());
+        return new DirectoryMock(newDir.CreateDirectory());
     } 
 
     public static string
-    ToAbsoluteMockPath(this string subPath, DirectoryMockContext ctx) => subPath.ToAbsoluteFilePath(ctx.Root);
+    ToAbsoluteMockPath(this string subPath, DirectoryMock ctx) => subPath.ToAbsoluteFilePath(ctx.Root);
 
     public static string
-    AbsolutePathTo(this DirectoryMockContext ctx, string path) => ctx.Root.AppendPath(path);
+    AbsolutePathTo(this DirectoryMock ctx, string path) => ctx.Root.AppendPath(path);
 
-    public static DirectoryMockContext
+    public static DirectoryMock
     MockThisDirectory(this string dir) {
         var ctx = Create();
         dir.GetAllDirectoryFiles().ForEach(x => x.CopyFile(x.GetPathRelativeTo(dir).ToAbsolute(ctx.Root)));
         return ctx;
     }
 
-    public static DirectoryMockContext
-    MockDirectory(this string dir, DirectoryMockContext ctx) {
+    public static DirectoryMock
+    MockDirectory(this string dir, DirectoryMock ctx) {
         dir.GetAllDirectoryFiles().ForEach(x => x.CopyFile(x.GetPathRelativeTo(dir).ToAbsolute(ctx.Root)));
         return ctx;
     }
 
     public static void
-    MockFiles(this IEnumerable<string> files, string baseSourceDirectory, DirectoryMockContext ctx) => 
+    MockFiles(this IEnumerable<string> files, string baseSourceDirectory, DirectoryMock ctx) => 
         files.ForEach(x => x.CopyFile(x.GetPathRelativeTo(baseSourceDirectory).ToAbsolute(ctx.Root)));
 
 }

@@ -15,8 +15,8 @@ public static class UpdaterHelper {
     
 public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
 
-    public static IEnumerable<PackageMetadata>
-    GetNewUpdates(this IEnumerable<PackageMetadata> packages, Updater updater) {
+    public static IEnumerable<PackageHeader>
+    GetNewUpdates(this IEnumerable<PackageHeader> packages, Updater updater) {
         foreach(var (_, packageUpdates) in packages.GroupByPackageName()) {
             if (!packageUpdates.TryGetLatestUpdate(out var latestUpdate))
                 continue;
@@ -26,7 +26,7 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     }
     
     public static InstallUpdateResult
-    DownloadAndInstall(this IEnumerable<PackageMetadata> updates, Updater updater) {
+    DownloadAndInstall(this IEnumerable<PackageHeader> updates, Updater updater) {
         InstallUpdateResult? result = null;
         foreach(var update in updates) {
             var updateResult = update.DownloadAndInstall(updater);
@@ -44,10 +44,10 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
         new InstallUpdateResult(isRestartRequired: result.IsRestartRequired || other.IsRestartRequired);
 
     public static InstallUpdateResult 
-    DownloadAndInstall(this PackageMetadata packageMetadata, Updater updater) {
-        if (packageMetadata.IsInstalled(updater))
-            throw new InvalidOperationException($"Update {packageMetadata} is already installed");
-        var package = packageMetadata.Id.DownloadPackageById(updater.HostClient);
+    DownloadAndInstall(this PackageHeader packageHeader, Updater updater) {
+        if (packageHeader.IsInstalled(updater))
+            throw new InvalidOperationException($"Update {packageHeader} is already installed");
+        var package = packageHeader.Id.DownloadPackageById(updater.HostClient);
         var difference = package.GetDifference(programDirectory: updater.ProgramDirectory);
         difference.DownloadPackageDifference(updater);
         return difference.InstallPackageDifference(updater);
@@ -60,8 +60,8 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
 
     }
     public static bool 
-    IsInstalled(this PackageMetadata packageMetadata, Updater updater) =>
-       packageMetadata.IsInstalled(programDirectory: updater.ProgramDirectory);
+    IsInstalled(this PackageHeader packageHeader, Updater updater) =>
+       packageHeader.IsInstalled(programDirectory: updater.ProgramDirectory);
 
     internal static string
     DownloadUpdateFiles(this PackageDifference difference, Updater Updater) {
@@ -144,7 +144,7 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     public static InstallUpdateResult 
     InstallPackageDifference(this PackageDifference difference, Updater Updater) {
         if (!difference.IsDifferent())
-            throw new InvalidOperationException($"Package {difference.Package.Metadata.Version} is already installed");
+            throw new InvalidOperationException($"Package {difference.Package.Header.Version} is already installed");
         Updater.Logger.LogInformation($"Installing package update {difference.Package}...");
         var remainingDifference = difference.InstallAccessibleFiles(Updater);
         return remainingDifference != null && remainingDifference.IsDifferent()
@@ -301,8 +301,8 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     public static bool 
     IsUpdateRunnerQueued() => "updaterequested".ToAbsoluteFilePath(Environment.CurrentDirectory).FileExists();
 
-    private static IEnumerable<PackageMetadata>
-    GetFreshUpdates(this IList<PackageMetadata> packagesByVersion, Updater Updater) {
+    private static IEnumerable<PackageHeader>
+    GetFreshUpdates(this IList<PackageHeader> packagesByVersion, Updater Updater) {
         #if DEBUG
         packagesByVersion.VerifyOrderedByVersion();
         #endif
@@ -315,7 +315,7 @@ public static TimeSpan RelevantDownloadSpeedTimeSpan = TimeSpan.FromSeconds(15);
     }
     
     public static string 
-    GetUpdateBackupDirectory(this PackageMetadata update, Updater Updater) =>
+    GetUpdateBackupDirectory(this PackageHeader update, Updater Updater) =>
         Updater.BackupDirectory.AppendPath(update.Name).CreateDirectoryIfAbsent();
     
 }

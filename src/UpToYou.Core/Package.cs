@@ -10,19 +10,19 @@ namespace UpToYou.Core {
     
 [ProtoContract]
 public class Package {
-    [ProtoMember(1)] public PackageMetadata Metadata { get; }
+    [ProtoMember(1)] public PackageHeader Header { get; }
     [ProtoMember(2)] public ImmutableDictionary<RelativePath, PackageFile> Files { get; }
-    public Package(PackageMetadata metadata, ImmutableDictionary<RelativePath, PackageFile> files) {
-        Metadata = metadata;
+    public Package(PackageHeader header, ImmutableDictionary<RelativePath, PackageFile> files) {
+        Header = header;
         Files = files;
         _idToFile = new Lazy<Dictionary<string, PackageFile>>(() => Files.Values.ToDictionary(x => x.Id, x => x));
     }
 
     protected Package() => Files = ImmutableDictionary<RelativePath, PackageFile>.Empty;
 
-    public string Id => Metadata.Id;
-    public Version Version => Metadata.Version;
-    public string Name => Metadata.Name;
+    public string Id => Header.Id;
+    public Version Version => Header.Version;
+    public string Name => Header.Name;
 
     private readonly Lazy<Dictionary<string, PackageFile>> _idToFile;
     public PackageFile GetFileById(string id) => _idToFile.Value.TryGetValue(id, out var res) ? res : throw new InvalidOperationException($"PackageFile with id = {id.Quoted()} not found");
@@ -34,7 +34,7 @@ public class Package {
     GetFiles(RelativeGlob glob) => 
         Files.Values.Where(x => x.Path.Matches(glob));
 
-    public override string ToString() => Metadata.ToString();
+    public override string ToString() => Header.ToString();
 }
 
 [ProtoContract(SkipConstructor = true)]
@@ -59,14 +59,14 @@ PackageFile {
 
 [ProtoContract]
 public class
-PackageMetadata: IHasCustomProperties{
+PackageHeader: IHasCustomProperties{
     [ProtoMember(1)] public string Id { get; }
     [ProtoMember(2)] public string Name { get; }
     [ProtoMember(3)] public Version Version { get; }
     [ProtoMember(4)] public DateTime DatePublished { get; }
     [ProtoMember(5)] public PackageFile VersionProviderFile { get; }
     [ProtoMember(6)] public ImmutableDictionary<string, string> CustomProperties { get; }
-    public PackageMetadata(string id, string name, Version version, DateTime datePublished, PackageFile versionProviderFile, ImmutableDictionary<string, string> customProperties) {
+    public PackageHeader(string id, string name, Version version, DateTime datePublished, PackageFile versionProviderFile, ImmutableDictionary<string, string> customProperties) {
         Id = id;
         Name = name;
         Version = version;
@@ -75,10 +75,10 @@ PackageMetadata: IHasCustomProperties{
         CustomProperties = customProperties;
     }
 
-    protected PackageMetadata() => CustomProperties = ImmutableDictionary<string, string>.Empty;
+    protected PackageHeader() => CustomProperties = ImmutableDictionary<string, string>.Empty;
 
     public bool 
-    IsSamePackage(PackageMetadata other) =>
+    IsSamePackage(PackageHeader other) =>
         Version == other.Version &&
         Name == other.Name;
 

@@ -11,22 +11,22 @@ using System.Threading.Tasks;
 namespace UpToYou.Core {
 public static class PackageHelper {
     
-    public static IEnumerable<(string packageName, ImmutableList<PackageMetadata> updateByVersion)> 
-    GroupByPackageName(this IEnumerable<PackageMetadata> packages) =>
+    public static IEnumerable<(string packageName, ImmutableList<PackageHeader> updateByVersion)> 
+    GroupByPackageName(this IEnumerable<PackageHeader> packages) =>
         packages.GroupBy(x => x.Name).Select(x => (packageName: x.Key, updateByVersion: x.OrderByDescending(x => x.Version).ToImmutableList()));
     
     public static bool 
-    TryGetLatestUpdate(this IEnumerable<PackageMetadata> updates, [NotNullWhen(true)] out PackageMetadata? result) {
+    TryGetLatestUpdate(this IEnumerable<PackageHeader> updates, [NotNullWhen(true)] out PackageHeader? result) {
         result = updates.OrderByDescending(x => x.Version).FirstOrDefault();
         return result != null;
     }
     
     public static void 
-    VerifyOrderedByVersion(this IList<PackageMetadata> packages) =>
+    VerifyOrderedByVersion(this IList<PackageHeader> packages) =>
         packages.VerifyOrdered(x => x.Version);
     
     public static void 
-    VerifyOrderedByDate(this IList<PackageMetadata> packages) => packages.VerifyOrdered(x => x.DatePublished);
+    VerifyOrderedByDate(this IList<PackageHeader> packages) => packages.VerifyOrdered(x => x.DatePublished);
     
     public static void 
     Verify(this PackageFile packageFile, string path) {
@@ -36,7 +36,7 @@ public static class PackageHelper {
             throw new InvalidOperationException($"Expected {packageFile.FileVersion} of {packageFile.Path.Value.Quoted()} but was {path.GetFileVersion()?.ToString().Quoted()}");
     }
     
-    public static IEnumerable<PackageMetadata>
-    OrderByVersion(this IEnumerable<PackageMetadata> packages) => packages.OrderByDescending(x => x.Version);
+    public static IEnumerable<PackageHeader>
+    OrderByVersion(this IEnumerable<PackageHeader> packages) => packages.OrderByDescending(x => x.Version);
 }
 }

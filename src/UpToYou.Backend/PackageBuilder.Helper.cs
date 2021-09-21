@@ -22,7 +22,7 @@ internal static class BuilderHelper {
         
         var versionProvider = files.TryGetValue(builder.Specs.VersionProvider, out var res) ? res : throw new InvalidOperationException($"Version provider package file ({builder.Specs.VersionProvider}) not found");
         return (new Package(
-            metadata:new PackageMetadata(
+            header:new PackageHeader(
                 id:UniqueId.NewUniqueId(),
                 name:builder.Specs.PackageName ?? string.Empty,
                 version: versionProvider.FileVersion ?? throw new InvalidOperationException("Version provider file should have a file version"),
@@ -107,10 +107,10 @@ internal static class BuilderHelper {
     private static IEnumerable<PackageProjectionFile>
     BuildDeltas(this PackageProjectionFileSpec fileSpec, ProjectionBuilder builder, List<Package>? allCachedPackages = null) {
         var packages = (allCachedPackages ?? builder.Host.DownloadAllPackages())
-            .Where(x => x.Metadata.Name == builder.Package.Metadata.Name && x.Metadata.Version != builder.Package.Metadata.Version).ToList();
+            .Where(x => x.Header.Name == builder.Package.Header.Name && x.Header.Version != builder.Package.Header.Version).ToList();
         
         if (packages.Count > fileSpec.MaxHostDeltas)
-            packages = packages.OrderByDescending(x => x.Metadata.Version).Take(fileSpec.MaxHostDeltas).ToList();
+            packages = packages.OrderByDescending(x => x.Header.Version).Take(fileSpec.MaxHostDeltas).ToList();
 
         return packages.Select(x => BuildDelta(fileSpec, x, builder));
     }

@@ -98,7 +98,7 @@ PushUpdateHelper {
             customProperties:options.PackageCustomProperties?.ToCustomProperties()??ImmutableDictionary<string, string>.Empty);
 
         var (package, _) = packageBuilder.BuildPackage();
-        logger.LogInformation($"Package {package.Metadata.Name} #{package.Version} has been successfully built!");
+        logger.LogInformation($"Package {package.Header.Name} #{package.Version} has been successfully built!");
 
         //Retrieve host
         var host = options.GetFilesHost();
@@ -106,7 +106,7 @@ PushUpdateHelper {
         //Check existing packages
         var isSamePackageAlreadyExists = false;
         var allPackages = host.DownloadAllPackages();
-        if (allPackages.TryGet(x => x.Metadata.IsSamePackage(package.Metadata), out var samePackageOnHost)) {
+        if (allPackages.TryGet(x => x.Header.IsSamePackage(package.Header), out var samePackageOnHost)) {
             isSamePackageAlreadyExists = true;
             logger.LogWarning("The same package is already present on the host and will be skipped. However, the update notes will be overriden.");
         }
@@ -124,7 +124,7 @@ PushUpdateHelper {
                 logger: new ConsoleLogger());
 
             var projectionBuildResult = projectionBuilder.BuildProjection(allCachedPackages: allPackages);
-            logger.LogInformation($"Package {package.Metadata.Name} #{package.Version} has been successfully published!");
+            logger.LogInformation($"Package {package.Header.Name} #{package.Version} has been successfully published!");
 
             logger.LogInformation("Package projection has been successfully built!");
 
@@ -137,13 +137,13 @@ PushUpdateHelper {
             logger.LogInformation("Projection files have been successfully uploaded!");
 
             //Removing existing same packages
-            allPackages.Where(x => x.Id != package.Id && x.Metadata.IsSamePackage(package.Metadata))
+            allPackages.Where(x => x.Id != package.Id && x.Header.IsSamePackage(package.Header))
                 .ForEach(x => host.RemovePackage(x.Id));
 
             //Update manifest
             var updateManifest = host.UpdateManifestFileExists() 
-                ? host.DownloadUpdatesManifest().AddOrChangeUpdate(package.Metadata)
-                : new UpdatesManifest(package.Metadata.ToSingleImmutableList());
+                ? host.DownloadUpdatesManifest().AddOrChangeUpdate(package.Header)
+                : new UpdatesManifest(package.Header.ToSingleImmutableList());
                     
             updateManifest.UploadUpdateManifest(host);
         }
@@ -157,18 +157,18 @@ PushUpdateHelper {
                 //Note! Here we also check if update notes file is successfully parseable. Keep in mind this if you want remove the code
                 if (!updateNotesFile.ReadAllFileText().Trim().ParseUpdateNotes().Contains(package.Version)) {
                     var msg = $"Update notes file {updateNotesFile.Quoted()} doesn't contain notes for the update {package.Version}";
-                    if (options.ForceIfEmptyNotes || package.Metadata.CustomProperties.ContainsKey("ForceIfEmptyNotes"))
+                    if (options.ForceIfEmptyNotes || package.Header.CustomProperties.ContainsKey("ForceIfEmptyNotes"))
                         logger.LogWarning(msg);
                     else 
                         throw new InvalidOperationException(msg);
                 }
                 var result = updateNotesFile.ParseUpdateNotesParsFromFile();
-                updateNotesFile.ReadAllFileBytes().UploadUpdateNotesUtf8(package.Metadata.Name, result.locale, host);
+                updateNotesFile.ReadAllFileBytes().UploadUpdateNotesUtf8(package.Header.Name, result.locale, host);
                 logger.LogInformation($"Uploaded update notes file {updateNotesFile.GetFileName()} for packageName={result.fileName??"any"}, locale={result.locale??"any"}");
             }
         }
         else 
-            logger.LogWarning($"No update notes files have been specified. Consider creating an update notes file with name {UpdateNotesHelper.GetUpdateNotesFileName(package.Metadata.Name, null).Quoted()}.");
+            logger.LogWarning($"No update notes files have been specified. Consider creating an update notes file with name {UpdateNotesHelper.GetUpdateNotesFileName(package.Header.Name, null).Quoted()}.");
 
         logger.LogInformation("Updates manifest has been updated");
     }

@@ -31,14 +31,14 @@ RemovePackageModule {
         var packages = host.DownloadAllPackages().ToList();
         logger.LogInformation($"Downloaded {packages.Count} packages");
 
-        var packageToRemove = packages.FirstOrDefault(x => x.Metadata.IsSamePackage(options.PackageVersion.ParseVersion(), options.PackageName));
+        var packageToRemove = packages.FirstOrDefault(x => x.Header.IsSamePackage(options.PackageVersion.ParseVersion(), options.PackageName));
         if (packageToRemove== null)
             throw new InvalidOperationException($"Package {options.PackageName} {options.PackageVersion} not found on the host.");
 
-        logger.LogInformation($"Package to remove found: id={packageToRemove.Id}, name={packageToRemove.Metadata.Name}, version={packageToRemove.Version}, dateBuilt={packageToRemove.Metadata.DatePublished}");
+        logger.LogInformation($"Package to remove found: id={packageToRemove.Id}, name={packageToRemove.Header.Name}, version={packageToRemove.Version}, dateBuilt={packageToRemove.Header.DatePublished}");
 
         host.RemovePackage(packageToRemove.Id);
-        logger.LogInformation($"Package {packageToRemove.Metadata.Name} {packageToRemove.Version} built on {packageToRemove.Metadata.DatePublished} has been removed from the host");
+        logger.LogInformation($"Package {packageToRemove.Header.Name} {packageToRemove.Version} built on {packageToRemove.Header.DatePublished} has been removed from the host");
 
         var updateManifest  = host.DownloadUpdatesManifestIfExists();
         if (updateManifest == null) {
