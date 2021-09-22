@@ -17,10 +17,12 @@ internal static class BuilderHelper {
     public static (Package package, string packageFilesDirectory)
     BuildPackage(this PackageBuilder builder){
         var files = builder.Specs.GetFilesRelative(builder.SourceDirectory)
-            .Select<RelativePath, PackageFile>(x => x.ToPackageFile(builder))
+            .Select(x => x.ToPackageFile(builder))
             .ToImmutableDictionary(x => x.Path, x => x);
         
-        var versionProvider = files.TryGetValue(builder.Specs.VersionProvider, out var res) ? res : throw new InvalidOperationException($"Version provider package file ({builder.Specs.VersionProvider}) not found");
+        var versionProvider = files.TryGetValue(builder.Specs.VersionProvider, out var result) 
+            ? result 
+            : throw new InvalidOperationException($"Version provider package file ({builder.Specs.VersionProvider}) not found in {builder.SourceDirectory.Quoted()}");
         return (new Package(
             header:new PackageHeader(
                 id:UniqueId.NewUniqueId(),
