@@ -13,9 +13,17 @@ public class RemovePackageOptions {
 
     [Value(1), Option(Required = true)]
     public string PackageName { get; }
-    public RemovePackageOptions(string packageVersion, string packageName) {
+    
+    [Option(Required = true)]
+    public string AzureRootContainer {get;}
+    
+    [Option(Required = true)]
+    public string AzureConnectionString {get;}
+    public RemovePackageOptions(string packageVersion, string packageName, string azureRootContainer, string azureConnectionString) {
         PackageVersion = packageVersion;
         PackageName = packageName;
+        AzureRootContainer = azureRootContainer;
+        AzureConnectionString = azureConnectionString;
     }
 }
 
@@ -24,9 +32,8 @@ RemovePackageModule {
     public static void 
     RemovePackage(this RemovePackageOptions options) {
 
-        var azureEnvironment = EnvironmentModule.GetAzureEnvironment();
         var logger = new ConsoleLogger();
-        var host = new AzureBlobStorage(azureEnvironment.ToAzureBlobStorageProperties());
+        var host = new AzureBlobStorage(new AzureBlobStorageOptions(rootContainer: options.AzureRootContainer, connectionString: options.AzureConnectionString));
 
         var packages = host.DownloadAllPackages().ToList();
         logger.LogInformation($"Downloaded {packages.Count} packages");
@@ -51,7 +58,7 @@ RemovePackageModule {
             return;
         }
         
-        updateManifest.RemovePackage(package.Id);
+        updateManifest = updateManifest.RemovePackage(package.Id);
 
         updateManifest.UploadUpdateManifest(host);
         logger.LogInformation("Update manifest has been successfully updated");
