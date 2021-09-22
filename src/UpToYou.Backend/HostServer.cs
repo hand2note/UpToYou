@@ -24,11 +24,13 @@ HostServerHelper {
     UpdateManifestFileExists(this IHost host) => 
         host.FileExists(HostHelper.UpdatesManifestPathOnHost);
     
-    public static void
-    UploadUpdateManifest(this UpdatesManifest manifest, IHost host) =>
+    public static UpdatesManifest
+    UploadUpdateManifest(this UpdatesManifest manifest, IHost host) {
         host.UploadBytes(
             path: HostHelper.UpdatesManifestPathOnHost,
             bytes: manifest.ProtoSerializeToBytes().Compress());
+        return manifest;
+    }
 
     public static UpdatesManifest? 
     DownloadUpdatesManifestIfExists(this IHost host) =>
