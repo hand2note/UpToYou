@@ -159,7 +159,7 @@ PushUpdateHelper {
 
             //Update manifest
             var updateManifest = host.UpdateManifestFileExists() 
-                ? host.DownloadUpdatesManifest().AddOrChangeUpdate(package.Header).UploadUpdateManifest(host)
+                ? host.DownloadUpdatesManifest().AddOrChangeUpdate(package.Header)
                 : new UpdatesManifest(package.Header.ToSingleImmutableList());
                     
             updateManifest.UploadUpdateManifest(host);
