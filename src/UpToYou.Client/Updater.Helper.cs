@@ -194,7 +194,7 @@ public static class UpdaterHelper {
                 fileDifference.UpdateFile(Updater, updateFilesCache);
             }
             catch (Exception ex) when (ex is AccessViolationException || ex is UnauthorizedAccessException) {
-                Updater.Logger.LogInformation($"File {fileDifference.PackageFile.Path.Value.Quoted()} is not accessible.");
+                Updater.Logger.LogInformation($"File {fileDifference.PackageFile.Path.Value.Quoted()} is not accessible. Restart app and running the update runner will be required.");
                 remainingDifferences.Add(fileDifference);
                 fileDifference.PrepareForRunner(Updater, updateFilesCache);
             }
@@ -246,7 +246,7 @@ public static class UpdaterHelper {
 
     internal static void
     PrepareForRunner(this PackageFileDifference fileDifference, Updater updater, Dictionary<string, string> fileHashToPath) {
-        var runnerDirectory = updater.UpdateFilesDirectory.AppendPath(RunnerSourcesSubDirectory).CreateDirectoryIfAbsent();
+        var runnerDirectory = updater.UpdateFilesDirectory.AppendPath(".uptoyou.runner").CreateDirectoryIfAbsent();
         
         if (!fileHashToPath.TryGetValue(fileDifference.PackageFile.FileHash, out var updateFile))
             throw new InvalidOperationException(
