@@ -35,7 +35,7 @@ public static class UpdaterHelper {
         foreach(var (_, packageUpdates) in packages.GroupByPackageName()) {
             if (!packageUpdates.TryGetLatestUpdate(out var latestUpdate))
                 continue;
-            if (!latestUpdate.IsInstalled(updater))
+            if (!latestUpdate.IsHigherVersionInstalled(updater.ProgramDirectory))
                 yield return latestUpdate;
         }
     }
