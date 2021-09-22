@@ -26,8 +26,8 @@ public class AzureBlobStorageTests {
         rootContainer: "uptoyou",
         connectionString: TestAzureConnectionsString);
 
-    public static AzureBlobStorageHost
-    AzureBlobStorageTest => new AzureBlobStorageHost(AzureStorageTestProperties);
+    public static AzureBlobStorage
+    AzureBlobStorageTest => new AzureBlobStorage(AzureStorageTestProperties);
 
     [OneTimeSetUp]
     public static void

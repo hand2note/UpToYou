@@ -21,8 +21,8 @@ public static class FileHostOptionsEx {
 
     public static IHost 
     GetFilesHost(this IFilesHostOptions options) {
-        if (options.FilesHostType == null || options.FilesHostType == nameof(AzureBlobStorageHost))
-            return new AzureBlobStorageHost(new AzureBlobStorageOptions(options.AzureRootContainer,  options.AzureConnectionString));
+        if (options.FilesHostType == null || options.FilesHostType == nameof(AzureBlobStorage))
+            return new AzureBlobStorage(new AzureBlobStorageOptions(options.AzureRootContainer,  options.AzureConnectionString));
             
         if (options.FilesHostType == nameof(LocalHost))
             return new LocalHost(options.LocalHostRootPath ?? throw new InvalidOperationException($"{nameof(PushUpdateOptions.LocalHostRootPath)} should be specified."));

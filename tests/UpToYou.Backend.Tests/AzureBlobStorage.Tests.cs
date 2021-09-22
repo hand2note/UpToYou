@@ -23,7 +23,7 @@ public class AzureBlobStorageTests {
         rootContainer:rootContainer,
         connectionString:ConnectionString);
 
-    public static AzureBlobStorageHost GetHost(string rootContainer) => new AzureBlobStorageHost(GetProps(rootContainer));
+    public static AzureBlobStorage GetHost(string rootContainer) => new AzureBlobStorage(GetProps(rootContainer));
     
     /*
      * NOTE! This test requires local azure blob storage devstoreaccount1
@@ -38,8 +38,8 @@ public class AzureBlobStorageTests {
         rootContainer: "uptoyou",
         connectionString: TestAzureConnectionsString);
 
-    public static AzureBlobStorageHost
-    AzureBlobStorageTest => new AzureBlobStorageHost(AzureStorageTestProperties);
+    public static AzureBlobStorage
+    AzureBlobStorageTest => new AzureBlobStorage(AzureStorageTestProperties);
 
     [OneTimeSetUp]
     public static void

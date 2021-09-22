@@ -26,7 +26,7 @@ RemovePackageModule {
 
         var azureEnvironment = EnvironmentModule.GetAzureEnvironment();
         var logger = new ConsoleLogger();
-        var host = new AzureBlobStorageHost(azureEnvironment.ToAzureBlobStorageProperties());
+        var host = new AzureBlobStorage(azureEnvironment.ToAzureBlobStorageProperties());
 
         var packages = host.DownloadAllPackages().ToList();
         logger.LogInformation($"Downloaded {packages.Count} packages");

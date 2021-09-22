@@ -18,7 +18,7 @@ public class AzureTestStorage {
         rootContainer:rootContainer,
         connectionString:ConnectionString);
 
-    public static AzureBlobStorageHost GetHost(string rootContainer) => new AzureBlobStorageHost(GetProps(rootContainer));
+    public static AzureBlobStorage GetHost(string rootContainer) => new AzureBlobStorage(GetProps(rootContainer));
 
 }
 }

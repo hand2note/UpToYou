@@ -26,10 +26,10 @@ AzureBlobStorageOptions {
 }
 
 public class 
-AzureBlobStorageHost: IHost {
+AzureBlobStorage: IHost {
     public Lazy<string> RootUrl { get; }
 
-    public AzureBlobStorageHost(AzureBlobStorageOptions options) {
+    public AzureBlobStorage(AzureBlobStorageOptions options) {
         RootUrl = new Lazy<string>(options.GetRootUrl);
         _rootContainer = new Lazy<BlobContainerClient>(options.GetRootContainer);
     } 
