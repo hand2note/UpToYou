@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using CommandLine;
@@ -108,6 +109,7 @@ PushUpdateHelper {
         var packageDirectory = workingDirectory.AppendPath("package").CreateDirectory();
         var projectionDirectory= workingDirectory.AppendPath("projection").CreateDirectory();
         var logger = new ConsoleLogger();
+        logger.LogInformation($"Pushing update (UpToYou.Backend.Runner {Process.GetCurrentProcess().MainModule?.FileVersionInfo.FileVersion})");
         projectionSpecs ??= sourceDirectory.EnumerateDirectoryRelativeFiles().ToList().ToSingleProjectionFileSpec().ToProjectionSpecs();
         
         //Build package

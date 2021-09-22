@@ -16,8 +16,6 @@ Updater {
     public IHostClient HostClient { get; }
     public ILogger Logger { get; }
     public UpdaterOptions Options {get;}
-    internal const string DefaultUpdateFilesSubDirectory = "_updates";
-    internal const string DefaultBackupSubDirectory = "_backup";
 
     public Updater(IHostClient hostClient, ILogger logger, UpdaterOptions options) {
         HostClient = hostClient;
