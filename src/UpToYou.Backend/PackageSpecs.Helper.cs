@@ -12,7 +12,7 @@ using UpToYou.Backend.FSharp;
 using UpToYou.Core;
 
 namespace UpToYou.Backend {
-internal static class SpecsHelper {
+internal static class PackageSpecsHelper {
     
     public static PackageSpecs
     FilesToPackageSpecs(this IEnumerable<RelativePath> files, RelativePath versionProvider) => 

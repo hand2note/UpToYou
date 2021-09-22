@@ -33,7 +33,7 @@ PackageSpecs: IHasCustomProperties {
         //At least one file must match a glob. Otherwise, we risk to build a package with a missing file.
         foreach(var fileGlob in Files)
             if (!result.Any(x => x.Matches(fileGlob)))
-                throw new InvalidOperationException($"No file matches package ({PackageName}) glob {fileGlob.Value.Quoted()}");
+                throw new InvalidOperationException($"No file matches package ({PackageName}) glob {fileGlob.Value.Quoted()} in directory {directory.Quoted()}");
         return result;
     } 
 

@@ -7,9 +7,8 @@ using UpToYou.Core.Tests;
 namespace UpToYou.Backend.Tests {
 public class PackageSpecsTests {
     
-    [Test]
-    public static void 
-    ParsePackageSpecs01() {
+    [Test] public static void
+    ParsePackageSpecs_Yaml01() {
         var actual = @"PackageName: TestPackage
 Files:
     - TestFile.dll
@@ -33,6 +32,5 @@ CustomProperties:
                 {"TestIntProperty","1"}
             }.ToImmutableDictionary()));
     }
-    
 }
 }
