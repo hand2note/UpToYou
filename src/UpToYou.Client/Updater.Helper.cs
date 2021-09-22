@@ -67,13 +67,14 @@ public static class UpdaterHelper {
         difference.DownloadPackageDifference(updater);
         return difference.InstallPackageDifference(updater);
     }
+    
     public static void 
     ExecuteRunner(this Updater updater) {
-        var applicationStartupFile = Process.GetCurrentProcess().StartInfo.FileName;
+        var applicationStartupFile = Process.GetCurrentProcess().MainModule?.FileName ?? throw new InvalidOperationException("Main module of the current process not found");
         var processesIdsToWaitExit = new int[]{ Process.GetCurrentProcess().Id};
-        Process.Start("UpToYou.Client.Runner.exe", $"{updater.UpdateFilesDirectory.Quoted()} {updater.BackupDirectory.Quoted()} {applicationStartupFile.Quoted()} {processesIdsToWaitExit.Aggregate("" ,(s, x) => s+","+x).Quoted()}");
-
+        Process.Start("UpToYou.Client.Runner.exe", $"{updater.UpdateFilesDirectory.AppendPath(".uptoyou.runner").Quoted()} {updater.BackupDirectory.Quoted()} {applicationStartupFile.Quoted()} {processesIdsToWaitExit.AggregateToString(",").Quoted()}");
     }
+    
     public static bool 
     IsInstalled(this PackageHeader packageHeader, Updater updater) =>
        packageHeader.IsInstalled(programDirectory: updater.ProgramDirectory);
@@ -143,8 +144,6 @@ public static class UpdaterHelper {
             }
     }
     
-    public static string RunnerSourcesSubDirectory = ".uptoyou.runner";
-
     public static PackageDifference
     DownloadPackageDifference(this PackageDifference difference, Updater Updater) {
         if (!difference.IsDifferent()) throw new InvalidOperationException("ActualState doesn't differ from the package");

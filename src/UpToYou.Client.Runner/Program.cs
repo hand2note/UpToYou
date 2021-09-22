@@ -18,32 +18,32 @@ namespace Updater {
             new Options() {
                 UpdateFilesDirectory = args[0],
                 BackupDirectory = args[1],
-                ProcessesIdsToWait = args[2].Split(',').Select(x => int.Parse(x.Trim())).ToList(),
-                ApplicationStartupFile = args[3]
+                ApplicationStartupFile = args[2],
+                ProcessesIdsToWait = args[3].Split(',').Select(x => int.Parse(x.Trim())).ToList()
             };
     }
 
     class Program {
 
         static void Main(string[] args) {
-                Console.WriteLine("Begin the installation of the update");
-                Console.WriteLine("Args:");
-                foreach (var arg in args) Console.WriteLine(arg);
-                Task.Delay(1000).Wait();
+            Console.WriteLine("Begin the installation of the update");
+            Console.WriteLine("Args:");
+            foreach (var arg in args) Console.WriteLine(arg);
+            Task.Delay(1000).Wait();
+            try {
+                Install(Options.FromArgs(args));
+            }
+            catch (Exception) {
+                Task.Delay(3000).Wait();
                 try {
                     Install(Options.FromArgs(args));
                 }
-                catch (Exception) {
-                    Task.Delay(3000).Wait();
-                    try {
-                        Install(Options.FromArgs(args));
-                    }
-                    catch (Exception ex) {
-                        Console.WriteLine(ex);
-                        Console.WriteLine("Installation failed. Sorry for inconvenience.");
-                        Console.ReadKey();
-                    }
+                catch (Exception ex) {
+                    Console.WriteLine(ex);
+                    Console.WriteLine("Installation failed. Sorry for inconvenience.");
+                    Console.ReadKey();
                 }
+            }
                
         }
 
@@ -83,8 +83,8 @@ namespace Updater {
         private static void WaitForProcessesToExit(Options options) {
             foreach (var process in options.ProcessesIdsToWait.Select(FindProcessById).Where(x => x!=null)){
                 //if (process.StartInfo.FileName.StartsWith(Environment.CurrentDirectory)) {
-                Console.WriteLine($"Waiting for process \"{process.ProcessName}\" to exit");
                 try {
+                    Console.WriteLine($"Waiting for process \"{process.ProcessName}\" to exit");
                     process.WaitForExit();
                     Task.Delay(1000).Wait();
                 }
