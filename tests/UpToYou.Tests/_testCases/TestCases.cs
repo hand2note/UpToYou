@@ -74,7 +74,6 @@ internal static class TestCasesHelper {
             package:package.package,
             projectionSpecs:test.GetProjectionSpecs(),
             host:ctx.Host,
-            hostRootUrl:ctx.HostRootUrl, 
             logger: NullLogger.Instance);
 
         return projectionBuildCtx.BuildProjection();

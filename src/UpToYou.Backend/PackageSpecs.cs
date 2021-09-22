@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using UpToYou.Core;
+// ReSharper disable MemberInitializerValueIgnored
 
 namespace UpToYou.Backend {
     
 internal class 
 PackageSpecs: IHasCustomProperties {
     public string PackageName { get; }
-    public ImmutableList<RelativeGlob> Files { get; }
-    public ImmutableList<RelativeGlob> ExcludedFiles { get; }
+    public ImmutableList<RelativeGlob> Files { get; } = ImmutableList<RelativeGlob>.Empty;
+    public ImmutableList<RelativeGlob> ExcludedFiles { get; } = ImmutableList<RelativeGlob>.Empty;
     public RelativePath VersionProvider { get; }
-    public ImmutableDictionary<string, string> CustomProperties { get; }
+    public ImmutableDictionary<string, string> CustomProperties { get; } = ImmutableDictionary<string, string>.Empty;
     public PackageSpecs(string packageName, ImmutableList<RelativeGlob> files, ImmutableList<RelativeGlob> excludedFiles, RelativePath versionProvider, ImmutableDictionary<string, string> customProperties) {
         PackageName = packageName;
         Files = files;
@@ -20,6 +21,7 @@ PackageSpecs: IHasCustomProperties {
         VersionProvider = versionProvider;
         CustomProperties = customProperties;
     }
+    
 
     public IEnumerable<string> 
     GetFiles(string directory) => 

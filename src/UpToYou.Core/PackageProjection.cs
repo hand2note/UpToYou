@@ -15,12 +15,10 @@ internal class
 PackageProjection: IHasUniqueId {
     [ProtoMember(1)] public string Id { get; }
     [ProtoMember(2)] public string PackageId { get; }
-    [ProtoMember(3)] public string RootUrl { get; }
-    [ProtoMember(4)] public ImmutableList<PackageProjectionFile> Files  { get; }
-    public PackageProjection(string id, string packageId, string rootUrl, ImmutableList<PackageProjectionFile> files) {
+    [ProtoMember(3)] public ImmutableList<PackageProjectionFile> Files  { get; }
+    public PackageProjection(string id, string packageId,  ImmutableList<PackageProjectionFile> files) {
         Id = id;
         PackageId = packageId;
-        RootUrl = rootUrl;
         Files = files;
     }
 

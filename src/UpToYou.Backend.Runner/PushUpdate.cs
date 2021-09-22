@@ -82,27 +82,44 @@ public class PushUpdateOptions: IFilesHostOptions {
 
 public static class 
 PushUpdateHelper {
+    
     public static void 
-    PushUpdate(this PushUpdateOptions options){
-        var workingDirectory = options.WorkingDirectory ?? Environment.CurrentDirectory.AppendPath(UniqueId.NewUniqueId());
+    PushUpdate(this PushUpdateOptions options) =>
+        PushUpdate(
+            workingDirectory:options.WorkingDirectory ?? Environment.CurrentDirectory.AppendPath(UniqueId.NewUniqueId()),
+            sourceDirectory: options.SourceDirectory,
+            packageSpecs:options.PackageSpecsFile.ParsePackageSpecsFromFile(),
+            projectionSpecs:  options.ProjectionSpecsFile?.ParseProjectionFromFile(),
+            updateNotesFiles: options.UpdateNotesFiles?.ToList() ?? new List<string>(),
+            allowEmptyNotes: options.ForceIfEmptyNotes,
+            host: options.GetFilesHost()
+        );
+
+    /// <returns>Package Id</returns>
+    internal static string 
+    PushUpdate(string workingDirectory, 
+        string sourceDirectory,
+        PackageSpecs packageSpecs,
+        PackageProjectionSpecs? projectionSpecs,
+        IList<string> updateNotesFiles,
+        bool allowEmptyNotes,
+        IHost host)
+    {
         var packageDirectory = workingDirectory.AppendPath("package").CreateDirectory();
         var projectionDirectory= workingDirectory.AppendPath("projection").CreateDirectory();
         var logger = new ConsoleLogger();
-
+        projectionSpecs ??= sourceDirectory.EnumerateDirectoryRelativeFiles().ToList().ToSingleProjectionFileSpec().ToProjectionSpecs();
+        
         //Build package
         logger.LogDebug("Building package...");
         var packageBuilder = new PackageBuilder(
-            sourceDirectory:options.SourceDirectory,
+            sourceDirectory:sourceDirectory,
             outputDirectory:packageDirectory,
-            specs:options.PackageSpecsFile.ReadAllFileText().Trim().ParsePackageSpecsFromYaml(),
-            customProperties:options.PackageCustomProperties?.ToCustomProperties()??ImmutableDictionary<string, string>.Empty);
+            specs:packageSpecs);
 
         var (package, _) = packageBuilder.BuildPackage();
         logger.LogInformation($"Package {package.Header.Name} #{package.Version} has been successfully built!");
 
-        //Retrieve host
-        var host = options.GetFilesHost();
-        
         //Check existing packages
         var isSamePackageAlreadyExists = false;
         var allPackages = host.DownloadAllPackages();
@@ -117,10 +134,8 @@ PushUpdateHelper {
                 sourceDirectory: packageDirectory,
                 outputDirectory: projectionDirectory,
                 package: package,
-                projectionSpecs: options.ProjectionSpecsFile?.ReadAllFileText().Trim().ParseProjectionFromYaml()
-                    ?? options.SourceDirectory.EnumerateDirectoryRelativeFiles().ToList().ToSingleProjectionFileSpec().ToProjectionSpecs(),
+                projectionSpecs: projectionSpecs,
                 host: host,
-                hostRootUrl: options.LocalHostRootPath ?? options.AzureBlobStorageProperties().GetRootUrl(),
                 logger: new ConsoleLogger());
 
             var projectionBuildResult = projectionBuilder.BuildProjection(allCachedPackages: allPackages);
@@ -149,15 +164,14 @@ PushUpdateHelper {
         }
 
         //Upload update notes
-        if (options.UpdateNotesFiles != null) {
-            var updateNotesFiles = options.UpdateNotesFiles.ToList();
+        if (updateNotesFiles.Count > 0) {
             logger.LogDebug($"Uploading {updateNotesFiles.Count} update notes files");
             foreach (var updateNotesFile in updateNotesFiles) {
                 updateNotesFile.VerifyFileExistence();
                 //Note! Here we also check if update notes file is successfully parseable. Keep in mind this if you want remove the code
                 if (!updateNotesFile.ReadAllFileText().Trim().ParseUpdateNotes().Contains(package.Version)) {
                     var msg = $"Update notes file {updateNotesFile.Quoted()} doesn't contain notes for the update {package.Version}";
-                    if (options.ForceIfEmptyNotes || package.Header.CustomProperties.ContainsKey("ForceIfEmptyNotes"))
+                    if (allowEmptyNotes || package.Header.CustomProperties.ContainsKey("ForceIfEmptyNotes"))
                         logger.LogWarning(msg);
                     else 
                         throw new InvalidOperationException(msg);
@@ -171,6 +185,7 @@ PushUpdateHelper {
             logger.LogWarning($"No update notes files have been specified. Consider creating an update notes file with name {UpdateNotesHelper.GetUpdateNotesFileName(package.Header.Name, null).Quoted()}.");
 
         logger.LogInformation("Updates manifest has been updated");
+        return package.Id;
     }
     
     public static ImmutableDictionary<string,string> 

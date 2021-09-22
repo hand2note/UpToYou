@@ -14,12 +14,10 @@ PackageBuilder {
     public string SourceDirectory { get; }
     public string OutputDirectory{ get; }
     public PackageSpecs Specs { get; }
-    public ImmutableDictionary<string, string> CustomProperties { get; }
-    public PackageBuilder(string sourceDirectory, string outputDirectory, PackageSpecs specs, ImmutableDictionary<string, string> customProperties) {
+    public PackageBuilder(string sourceDirectory, string outputDirectory, PackageSpecs specs) {
         SourceDirectory = sourceDirectory;
         OutputDirectory = outputDirectory;
         Specs = specs;
-        CustomProperties = customProperties;
     }
 }
 
@@ -30,15 +28,13 @@ ProjectionBuilder {
     public Package Package{ get; }
     public PackageProjectionSpecs ProjectionSpecs{ get; }
     public IHost Host {get;}
-    public string HostRootUrl{ get; }
     public ILogger Logger { get; }
-    public ProjectionBuilder(string sourceDirectory, string outputDirectory, Package package, PackageProjectionSpecs projectionSpecs, IHost host, string hostRootUrl, ILogger logger) {
+    public ProjectionBuilder(string sourceDirectory, string outputDirectory, Package package, PackageProjectionSpecs projectionSpecs, IHost host, ILogger logger) {
         SourceDirectory = sourceDirectory;
         OutputDirectory = outputDirectory;
         Package = package;
         ProjectionSpecs = projectionSpecs;
         Host = host;
-        HostRootUrl = hostRootUrl;
         Logger = logger;
     }
 }

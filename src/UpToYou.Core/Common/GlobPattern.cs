@@ -69,7 +69,7 @@ GlobHelper {
 
     public static RelativeGlob
     ToRelativeGlob(this RelativePath path) => new RelativeGlob(path.Value.Escape("[").Escape("]").Escape("*").Escape("!"));
-
+    
     private static string 
     Escape(this string str, string @char) => str.Replace(@char, "[" + @char + "]");
 

@@ -24,6 +24,9 @@ internal static class SpecsHelper {
             customProperties: ImmutableDictionary<string, string>.Empty);
 
     public static PackageSpecs
+    ParsePackageSpecsFromFile(this string file) => file.FileHasExtension(".json") ? file.ReadAllFileText().ParseJson<PackageSpecs>() : file.ReadAllFileText().Trim().ParsePackageSpecsFromYaml();
+    
+    public static PackageSpecs
     ParsePackageSpecsFromYaml(this string yaml) {
 
         if (string.IsNullOrWhiteSpace(yaml)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(yaml));
@@ -70,6 +73,10 @@ internal static class SpecsHelper {
     public static PackageProjectionSpecs
     ToSingleFileProjectionSpecs(this IEnumerable<RelativePath> files) => files.ToSingleProjectionFileSpec().ToProjectionSpecs();
 
+    public static PackageProjectionSpecs
+    ParseProjectionFromFile(this string file) => 
+        file.FileHasExtension(".json") ? file.ReadAllFileText().ParseJson<PackageProjectionSpecs>() : file.ReadAllFileText().Trim().ParseProjectionFromYaml();
+    
     internal static PackageProjectionSpecs
     ParseProjectionFromYaml(this string yaml) {
         if (string.IsNullOrWhiteSpace(yaml)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(yaml));

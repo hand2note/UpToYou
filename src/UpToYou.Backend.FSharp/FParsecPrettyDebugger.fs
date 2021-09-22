@@ -19,7 +19,7 @@ let addToDebug (stream:CharStream<'C> when 'C:>IFParsecPrettyDebugableContext) l
            | Enter    -> sprintf "> %s" label, startIndent, startIndent+1
            | Leave res ->
                let str = sprintf "< %s (%A)" label res.Status
-               let resStr = sprintf "%s %A" (str.PadRight(msgPadLen-startIndent-1)) res.Result
+               let resStr = sprintf "%s" (str.PadRight(msgPadLen-startIndent-1))
                resStr, startIndent-1, startIndent-1
    
        let indentStr =

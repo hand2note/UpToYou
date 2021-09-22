@@ -103,7 +103,6 @@ internal static class UpdaterTestContextEx {
             package:@in.package,
             projectionSpecs:specs,
             host:ctx.Host,
-            hostRootUrl:ctx.DirMock.Root,
            logger:null);
 
         ctx.BuiltProjections.Add(@in.package.Header.Version);

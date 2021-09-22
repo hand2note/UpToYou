@@ -38,10 +38,17 @@ Files {
 
     public static Version?
     GetFileVersion(this string file) {
-        var fi = FileVersionInfo.GetVersionInfo(file);
-        if ((fi.FileMajorPart, fi.FileMinorPart,  fi.FileBuildPart,  fi.FilePrivatePart) == (0,0,0,0))
+        #if DEBUG 
+        //this is for testing purposes
+        var firstLine = File.ReadLines(file).FirstOrDefault();
+        if (firstLine != null && firstLine.StartsWith("version:")) {
+            return new Version(firstLine.Substring("version:".Length).Trim());
+        }
+        #endif
+        var fileVersionInfo = FileVersionInfo.GetVersionInfo(file);
+        if ((fileVersionInfo.FileMajorPart, fileVersionInfo.FileMinorPart,  fileVersionInfo.FileBuildPart,  fileVersionInfo.FilePrivatePart) == (0,0,0,0))
             return null;
-        return new Version(fi.FileMajorPart, fi.FileMinorPart, fi.FileBuildPart, fi.FilePrivatePart);
+        return new Version(fileVersionInfo.FileMajorPart, fileVersionInfo.FileMinorPart, fileVersionInfo.FileBuildPart, fileVersionInfo.FilePrivatePart);
     }
 
     public static string

@@ -12,7 +12,7 @@ internal static class BuilderHelper {
     
     public static PackageBuilder 
     ToPackageBuildContext(this PackageSpecs packageSpecs, string sourceDirectory, string outputDirectory) =>
-        new PackageBuilder(sourceDirectory, outputDirectory, packageSpecs, ImmutableDictionary<string, string>.Empty);
+        new PackageBuilder(sourceDirectory, outputDirectory, packageSpecs);
 
     public static (Package package, string packageFilesDirectory)
     BuildPackage(this PackageBuilder builder){
@@ -28,7 +28,7 @@ internal static class BuilderHelper {
                 version: versionProvider.FileVersion ?? throw new InvalidOperationException("Version provider file should have a file version"),
                 datePublished: DateTime.Now,
                 versionProviderFile: versionProvider,
-                customProperties: builder.Specs.CustomProperties.AddCustomProperties(builder.CustomProperties, @override:true)),
+                customProperties: builder.Specs.CustomProperties),
             files: files), builder.OutputDirectory);;
     }
 
@@ -51,7 +51,6 @@ internal static class BuilderHelper {
         (new PackageProjection(
                 id: UniqueId.NewUniqueId(),
                 packageId: builder.Package.Id,
-                rootUrl: builder.HostRootUrl,
                 files: builder.ProjectionSpecs
                     .RetrieveHostedFiles(builder.Package)
                     .SelectMany(x => x.BuildHostedFiles(builder, allCachedPackages).Where(y => y.RelevantItemsIds.Any())).ToImmutableList()).Log(builder),
