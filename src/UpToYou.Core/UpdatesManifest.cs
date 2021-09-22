@@ -40,10 +40,9 @@ UpdatesManifestHelper {
     public static UpdatesManifest 
     AddOrChangeUpdate(this UpdatesManifest manifest, PackageHeader package) {
         if (manifest.Packages.TryGet(x => x.IsSamePackage(package), out var existingPackage))
-            manifest.RemovePackage(existingPackage.Id);
+            manifest = manifest.RemovePackage(existingPackage.Id);
                 
-        manifest.AddPackage(package);
-        return manifest;
+        return manifest.AddPackage(package);
     }
     
     public static IEnumerable<PackageHeader>
