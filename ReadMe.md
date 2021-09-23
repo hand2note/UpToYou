@@ -36,7 +36,8 @@ Added:
 --AzureConnectionString $MyAzureConnectionString
 ```
 
-3. On you client side 
+## How to download and install an update?
+On you client side 
 ```powershell
 > dotnet add package UpToYou.Client
 ```
