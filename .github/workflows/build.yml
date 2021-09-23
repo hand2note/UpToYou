@@ -1,0 +1,46 @@
+name: Build & Test 
+
+on: 
+  push: 
+    branches: [main]
+
+jobs:
+  
+  PublishBackendRunner: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install .Net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Restore
+        run: dotnet restore ./src/UpToYou.Backend.Runner
+
+      - name: Publish
+        run: dotnet publish ./src/UpToYou.Backend.Runner -c Release -o ./publish
+
+      - name: Copy Built Files
+        run: Get-ChildItem ./publish -Recurse | Copy-Item -Destination ./nuget/UpToYou.Backend.Runner/content
+        shell: pwsh
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: build-backend
+          path: ./publish 
+
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: ./tests/Run-Tests.ps1
+        shell: pwsh
+
+    

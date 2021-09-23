@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ILRepack" Version="2.0.18" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\UpToYou.Core\UpToYou.Core.csproj" />
   </ItemGroup>
 
@@ -25,4 +29,15 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
+    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /internalize /lib:$(OutputPath) ^
+          /target: $(OutputPath)UpToYou.Client.dll ^
+          /out:$(OutputPath)UpToYou.dll ^
+          $(OutputPath)UpToYou.Core.dll ^
+          $(OutputPath)protobuf-net.dll ^
+          $(OutputPath)deltaq.dll ^
+          $(OutputPath)DotNet.Glob.dll ^
+          $(OutputPath)XZ.NET.dll" />
+  </Target>
+  
 </Project>

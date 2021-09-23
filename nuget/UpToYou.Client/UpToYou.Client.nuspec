@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>UpToYou.Client</id>
+    <version>0.1.0</version>
+    <title>UpToYou.Client</title>
+    <authors>Andrii Plakhotnyi</authors>
+    <owners>Andrii Plakhotnyi</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>UpToYou client side.</description>
+    <copyright>Copyright ©  2021</copyright>
+    <repository url="https://github.com/AndrewPlakhotnyi/UpToYou" type="git"/>
+  </metadata>
+  <files>
+    <file src="../../src/UpToYou.Client/bin/Release/net5.0/UpToYou.dll" target="lib\net5.0"/>
+    <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.exe" target="lib\net5.0" />
+    <file src="content\*.*" target="build"/>
+    <file src="UpToYou.Client.targets" target="build"/>
+  </files>
+</package>

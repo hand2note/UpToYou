@@ -1,0 +1,42 @@
+name: Deploy
+
+on: 
+  workflow_run:
+    wokflows: ["Run Tests"]
+    branches: [main]
+    types: [completed]
+
+jobs:
+  PublisHand2Note:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+    - name: Setup Git
+      run: git config --system core.longpaths true
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Download built package
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: build.yml
+        workflow_conclusion: success
+
+    - name: Copy Built Files
+      run: Get-ChildItem ./build-backend -Recurse | Copy-Item -Destination ./nuget/UpToYou.Backend.Runner/content
+      shell: pwsh
+
+    - name: Nuget Pack
+      run: dotnet pack ./src/UpToYou.Backend.Runner -p:NuspecFile=../../nuget/uptoyou.backend.runner/uptoyou.backend.runner.nuspec -o .
+      
+    - name: Publish Nuget to GitHub registry
+      run: dotnet nuget push ./uptoyou.backend.runner.0.1.0.nupkg -s https://nuget.pkg.github.com/AndrewPlakhotnyi/index.json -k ${GITHUB_TOKEN}  
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+  
+        
+    
+    
+
+    
