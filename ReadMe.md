@@ -63,7 +63,7 @@ if (!latestPackage.IsInstalled()){
 
 Basically this code:
 - Downloaded updates manifest
-- Checked wether the new update is available
+- Checked whether the new update is available
 - Downloaded update notes to show them to user
 - Downloaded and installed the new update files
 - Restart could be required because some files can't be replace while the app is running. 
