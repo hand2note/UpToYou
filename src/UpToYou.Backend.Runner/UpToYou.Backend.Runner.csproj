@@ -5,8 +5,12 @@
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>UpToYou</AssemblyName>
     <Nullable>enable</Nullable>
-    <ApplicationIcon />
-    <StartupObject />
+    
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>uptoyou</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <Version>0.1.1</Version>
+    <Authors>Andrii Plakhotnyi</Authors>
   </PropertyGroup>
 
   <ItemGroup>

@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
-    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /internalize /lib:$(OutputPath) ^
+    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
           /target: $(OutputPath)UpToYou.Client.dll ^
           /out:$(OutputPath)UpToYou.dll ^
           $(OutputPath)UpToYou.Core.dll ^
