@@ -30,14 +30,20 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
+    <!--Internalize all exception UpToYou.Core.dll-->
     <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
-          /target: $(OutputPath)UpToYou.Client.dll ^
-          /out:$(OutputPath)UpToYou.dll ^
-          $(OutputPath)UpToYou.Core.dll ^
+          /internalize ^
+          /target: $(OutputPath)UpToYou.Core.dll ^
+          /out:$(OutputPath)UpToYou.Core.dll ^
           $(OutputPath)protobuf-net.dll ^
           $(OutputPath)deltaq.dll ^
           $(OutputPath)DotNet.Glob.dll ^
           $(OutputPath)XZ.NET.dll" />
+    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
+          /target: $(OutputPath)UpToYou.Client.dll ^
+          /out:$(OutputPath)UpToYou.Client.dll ^
+          $(OutputPath)UpToYou.Core.dll
+          "/>
   </Target>
   
 </Project>
