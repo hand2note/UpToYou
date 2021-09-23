@@ -50,7 +50,7 @@ var updatesManifest = host.DownloadUpdatesManifest();
 var latestPackage = updater.Packages.OrderByVersion().First();
 if (!latestPackage.IsInstalled()){
     var updateNotes = host.DownloadUpdateNotes(packageName: latestPackage.Name, locale: "en");
-    //ask the user to intall an updates
+    //ask the user to intall the update
     var updater = new Updater(host, logger: NullLogger.Instance, options: UpdaterOptions.Default);
     var installResult = latestPackge.DownloadAndInstall(updater);
     if (installResult.IsRestartRequired){
