@@ -25,6 +25,7 @@ class Program {
                 throw new InvalidOperationException($"Failed to parse command arguments");
         } catch(Exception exception) {
             new ConsoleLogger().LogException(LogLevel.Critical, "Failed to execute", exception);
+            Environment.Exit(1);
         }
     }
 }

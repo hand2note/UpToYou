@@ -41,7 +41,7 @@
           $(OutputPath)XZ.NET.dll" />
     <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
           /target: $(OutputPath)UpToYou.Client.dll ^
-          /out:$(OutputPath)UpToYou.Client.dll ^
+          /out:$(OutputPath)UpToYou.dll ^
           $(OutputPath)UpToYou.Core.dll
           "/>
   </Target>
