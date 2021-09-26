@@ -34,7 +34,7 @@
     <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
           /internalize ^
           /target: $(OutputPath)UpToYou.Core.dll ^
-          /out:$(OutputPath)UpToYou.Core.dll ^
+          /out:$(OutputPath)UpToYou.Core.Intermediate.dll ^
           $(OutputPath)protobuf-net.dll ^
           $(OutputPath)deltaq.dll ^
           $(OutputPath)DotNet.Glob.dll ^
@@ -42,7 +42,7 @@
     <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
           /target: $(OutputPath)UpToYou.Client.dll ^
           /out:$(OutputPath)UpToYou.dll ^
-          $(OutputPath)UpToYou.Core.dll
+          $(OutputPath)UpToYou.Core.Intermediate.dll
           "/>
   </Target>
   
