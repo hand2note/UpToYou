@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="ILRepack" Version="2.0.18" />
   </ItemGroup>
@@ -30,20 +30,17 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
-    <!--Internalize all exception UpToYou.Core.dll-->
-    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
-          /internalize ^
-          /target: $(OutputPath)UpToYou.Core.dll ^
-          /out:$(OutputPath)UpToYou.Core.Intermediate.dll ^
-          $(OutputPath)protobuf-net.dll ^
+    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /internalize:$(MSBuildProjectDirectory)/ExcludeInternalize.txt ^
+          /lib:$(OutputPath) ^
+          /out:$(OutputPath)UpToYou.dll ^
+          $(OutputPath)UpToYou.Client.dll ^
+          $(OutputPath)UpToYou.Core.dll ^
           $(OutputPath)deltaq.dll ^
+          $(OutputPath)protobuf-net.Core.dll ^
+          $(OutputPath)protobuf-net.dll ^
           $(OutputPath)DotNet.Glob.dll ^
           $(OutputPath)XZ.NET.dll" />
-    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe /lib:$(OutputPath) ^
-          /target: $(OutputPath)UpToYou.Client.dll ^
-          /out:$(OutputPath)UpToYou.dll ^
-          $(OutputPath)UpToYou.Core.Intermediate.dll
-          "/>
   </Target>
-  
 </Project>
+
+
