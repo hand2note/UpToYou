@@ -35,6 +35,7 @@
           /out:$(OutputPath)UpToYou.dll ^
           $(OutputPath)UpToYou.Client.dll ^
           $(OutputPath)UpToYou.Core.dll ^
+          $(OutputPath)ICSharpCode.SharpZipLib.dll ^
           $(OutputPath)deltaq.dll ^
           $(OutputPath)protobuf-net.Core.dll ^
           $(OutputPath)protobuf-net.dll ^
