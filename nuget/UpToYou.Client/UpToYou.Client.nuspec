@@ -14,6 +14,7 @@
   </metadata>
   <files>
     <file src="../../src/UpToYou.Client/bin/Release/net5.0/UpToYou.dll" target="lib\net5.0"/>
+    <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.dll" target="lib\net5.0" />
     <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.exe" target="lib\net5.0" />
     <file src="content\*.*" target="build"/>
     <file src="UpToYou.Client.targets" target="build"/>
