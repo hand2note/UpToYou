@@ -5,4 +5,10 @@
     <TargetFrameworks>net5.0</TargetFrameworks>
   </PropertyGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
+    <Exec Command="$(NuGetPackageRoot)\ilrepack\2.0.18\tools\ilrepack.exe ^
+          /lib:$(OutputPath) ^
+          /out:$(OutputPath)UpToYou.Client.Runner.exe ^
+          $(OutputPath)UpToYou.Client.Runner.dll" />
+  </Target>
 </Project>
