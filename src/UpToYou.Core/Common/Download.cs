@@ -23,8 +23,8 @@ DownloadHelper {
 
     public static async Task
     DownloadAsync(this HttpClient client, string uri, IProgress<long> progress, CancellationToken cancellationToken, Stream outStream) {
-        var response = await client.GetAsync(uri, cancellationToken);
-        var stream =  await response.Content.ReadAsStreamAsync(cancellationToken);
+        var response = await client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+        using var stream =  await response.Content.ReadAsStreamAsync(cancellationToken);
         await stream.CopyToAsync(
             destination: outStream,
             progress, 
