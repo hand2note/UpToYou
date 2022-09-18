@@ -2,11 +2,23 @@
  <ItemGroup>
   <None Include="$(MSBuildThisFileDirectory)liblzma.dll">
      <Link>liblzma.dll</Link>
-     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
   <None Include="$(MSBuildThisFileDirectory)liblzma64.dll">
      <Link>liblzma64.dll</Link>
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
- </ItemGroup>
+   <None Include="$(MSBuildThisFileDirectory)UpToYou.Client.Runner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </None>
+   <None Include="$(MSBuildThisFileDirectory)UpToYou.Client.Runner.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </None>
+   <None Include="$(MSBuildThisFileDirectory)UpToYou.Client.Runner.deps.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </None>
+   <None Include="$(MSBuildThisFileDirectory)UpToYou.Client.Runner.runtimeconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </None>
+</ItemGroup>
 </Project>

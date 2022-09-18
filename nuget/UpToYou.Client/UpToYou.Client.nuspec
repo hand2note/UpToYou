@@ -14,7 +14,10 @@
   </metadata>
   <files>
     <file src="../../src/UpToYou.Client/bin/Release/net5.0/UpToYou.dll" target="lib\net5.0"/>
-    <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.exe" target="lib\net5.0" />
+    <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.exe" target="build" />
+    <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.dll" target="build" />
+    <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.deps.json" target="build" />
+    <file src="../../src/UpToYou.Client.Runner/bin/release/net5.0/UpToYou.Client.Runner.runtimeconfig.json" target="build" />
     <file src="content\*.*" target="build"/>
     <file src="UpToYou.Client.targets" target="build"/>
   </files>
