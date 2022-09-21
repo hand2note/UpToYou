@@ -5,6 +5,7 @@
 [assembly: InternalsVisibleTo("UpToYou")]
 [assembly: InternalsVisibleTo("UpToYou.Backend.Tests")]
 [assembly: InternalsVisibleTo("UpToYou.Backend.Runner.Tests")]
+[assembly: InternalsVisibleTo("Deploy")]
 
 namespace UpToYou.Backend {
     public class AssemblyInfo { }
