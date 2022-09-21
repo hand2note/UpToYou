@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>UpToYou</AssemblyName>
-    <Nullable>enable</Nullable>
+    <Nullable>annotations</Nullable>
     
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>uptoyou</ToolCommandName>
