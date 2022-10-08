@@ -9,7 +9,8 @@ internal static class SelfBinaries {
         path.Value == "UpToYou.dll" ||
         path.Value == "UpToYou.Core.dll" ||
         path.Value == "UpToYou.Client.dll" || 
-        path.Value == "UpToYou.Client.Runner.exe";
+        path.Value == "UpToYou.Client.Runner.exe" || 
+        path.Value == "Updater.exe";
 
     public static bool 
     IsInstallExecutable(this RelativePath path) => 

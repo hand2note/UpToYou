@@ -72,7 +72,7 @@ public static class UpdaterHelper {
     ExecuteRunner(this Updater updater) {
         var applicationStartupFile = Process.GetCurrentProcess().MainModule?.FileName ?? throw new InvalidOperationException("Main module of the current process not found");
         var processesIdsToWaitExit = new int[]{ Process.GetCurrentProcess().Id};
-        Process.Start("UpToYou.Client.Runner.exe", $"{updater.UpdateFilesDirectory.AppendPath(".uptoyou.runner").Quoted()} {updater.BackupDirectory.Quoted()} {applicationStartupFile.Quoted()} {processesIdsToWaitExit.AggregateToString(",").Quoted()}");
+        Process.Start("Updater.exe", $"{updater.UpdateFilesDirectory.AppendPath(".uptoyou.runner").Quoted()} {updater.BackupDirectory.Quoted()} {applicationStartupFile.Quoted()} {processesIdsToWaitExit.AggregateToString(",").Quoted()}");
     }
     
     public static bool 
