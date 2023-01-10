@@ -70,7 +70,7 @@ UpdateNotesHelper {
 
     public static IEnumerable<(Version version, string notes)> 
     ParseUpdateNotes(this string text) =>
-        text.Trim().Split(new[] {PackageNotesAnchor}, StringSplitOptions.RemoveEmptyEntries).Where(x => x!= "\uFEFF"/*BOM*/).Select(x => x.Trim().ParsePackageUpdateNotes());
+        text.Trim().Split(new[] {PackageNotesAnchor}, StringSplitOptions.RemoveEmptyEntries).Where(entry => entry!= "\uFEFF"/*BOM*/ && entry.Length > 2).Select(entry => entry.Trim().ParsePackageUpdateNotes());
 
     public static bool
     Contains(this IEnumerable<(Version version, string notes)> updateNotes, Version version) => updateNotes.FindNotes(version) != null;
