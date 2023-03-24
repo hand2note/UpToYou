@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UpToYou.Core;
 
 namespace UpToYou.Client
@@ -36,6 +37,19 @@ namespace UpToYou.Client
             var versionProvider = header.VersionProviderFile;
             
             return versionProvider.FileVersion != null && installedVersion >= versionProvider.FileVersion;
+        }
+
+        public static IEnumerable<(string name, Version version)>
+        GetInstalledVersions(this IEnumerable<PackageHeader> headers, string programDirectory) {
+            foreach (var header in headers) {
+                var actualFile = header.VersionProviderFile.Path.ToAbsolute(programDirectory);
+                if (!actualFile.FileExists())
+                    continue;
+                var installedVersion = actualFile.GetFileVersion();
+                if (installedVersion == null)
+                    continue;
+                yield return (header.Name, installedVersion);
+            }
         }
     }
 }
