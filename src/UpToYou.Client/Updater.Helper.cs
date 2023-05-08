@@ -193,7 +193,7 @@ public static class UpdaterHelper {
             try {
                 fileDifference.UpdateFile(Updater, updateFilesCache);
             }
-            catch (Exception ex) when (ex is AccessViolationException || ex is UnauthorizedAccessException) {
+            catch (Exception ex) when (ex is AccessViolationException or UnauthorizedAccessException or IOException) {
                 Updater.Logger.LogInformation($"File {fileDifference.PackageFile.Path.Value.Quoted()} is not accessible. Restart app and running the update runner will be required.");
                 remainingDifferences.Add(fileDifference);
                 fileDifference.PrepareForRunner(Updater, updateFilesCache);
