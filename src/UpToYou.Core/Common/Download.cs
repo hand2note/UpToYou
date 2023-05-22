@@ -23,13 +23,29 @@ DownloadHelper {
 
     public static async Task
     DownloadAsync(this HttpClient client, string uri, IProgress<long> progress, CancellationToken cancellationToken, Stream outStream) {
-        var response = await client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+        var response = await client.GetAsyncWithAttempts(uri, cancellationToken).ConfigureAwait(false);
         using var stream =  await response.Content.ReadAsStreamAsync(cancellationToken);
         await stream.CopyToAsync(
             destination: outStream,
             progress, 
             cancellationToken,
             bufferSize: 8192);
+    }
+
+    public static Task<HttpResponseMessage>
+    GetAsyncWithAttempts(this HttpClient httpClient, string requestUri, CancellationToken cancellationToken) {
+        var attempts = 100;
+        var attempt = 0;
+        while (attempt < attempts) {
+            try {
+                return httpClient.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken);
+            }
+            catch {
+                Task.Delay(200).Wait();
+                attempt++;
+            }
+        }
+        throw new Exception("Please check your internet connection and try again");
     }
     
     public static async Task 
