@@ -106,7 +106,7 @@ public static class UpdaterHelper {
     }
 
     private static PackageProjectionFile
-    SmallestFile(this IEnumerable<PackageProjectionFile> hostedFiles) => hostedFiles.MinBy(x => x.FileSize);
+    SmallestFile(this IEnumerable<PackageProjectionFile> hostedFiles) => Collections.MinBy(hostedFiles, x => x.FileSize);
 
     private static IEnumerable<List<PackageProjectionFile>>
     GetFilesToDownload(this PackageDifference difference, PackageProjection projection) {
@@ -186,7 +186,8 @@ public static class UpdaterHelper {
     internal static PackageDifference? 
     InstallAccessibleFiles(this PackageDifference difference, Updater Updater) {
         Updater.InitBackupDirectory();
-        var updateFilesCache = difference.GetUpdateFilesHashes(Updater).DistinctBy(x => x.hash).ToDictionary(x => x.hash, x => x.file);
+        var updateFilesHashes = difference.GetUpdateFilesHashes(Updater);
+        var updateFilesCache = Collections.DistinctBy(updateFilesHashes, x => x.hash).ToDictionary(x => x.hash, x => x.file);
         
         var remainingDifferences = new List<PackageFileDifference>();
         foreach (var fileDifference in  difference.DifferentFiles)
@@ -207,7 +208,8 @@ public static class UpdaterHelper {
     Install(this PackageDifference difference, Updater Updater) {
         Updater.InitBackupDirectory();
 
-        var updateFilesCache = difference.GetUpdateFilesHashes(Updater).DistinctBy(x => x.hash).ToDictionary(x => x.hash, x => x.file);
+        var updateFilesHashes = difference.GetUpdateFilesHashes(Updater);
+        var updateFilesCache = Collections.DistinctBy(updateFilesHashes, x => x.hash).ToDictionary(x => x.hash, x => x.file);
         difference.DifferentFiles.ForEach(x => x.UpdateFile(Updater, updateFilesCache));
         difference.Package.VerifyInstallation(Updater.ProgramDirectory);
     }
