@@ -6,13 +6,20 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$([MSBuild]::IsOsPlatform('Windows'))">
+	<DefineConstants>OS_WINDOWS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="deltaq" Version="1.2.0" />
     <PackageReference Include="DotNet.Glob" Version="3.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="protobuf-net" Version="3.0.52" />
-    <PackageReference Include="SharpZipLib" Version="1.1.0" />
-    <PackageReference Include="XZ.NET-netstandard" Version="2.0.0.2" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Windows'))">
+	<PackageReference Include="XZ.NET-netstandard" Version="2.0.0.2" />
   </ItemGroup>
 
 </Project>

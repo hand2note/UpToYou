@@ -2,7 +2,9 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+#if OS_WINDOWS
 using XZ.NET;
+#endif
 
 namespace UpToYou.Core {
 
@@ -39,6 +41,7 @@ GZipCompress: ICompress {
     }
 }
 
+#if OS_WINDOWS
 [CompressMethod(CompressMethods.Xz)]
 internal class 
 XzCompress:ICompress {
@@ -54,13 +57,14 @@ XzCompress:ICompress {
         xz.CopyTo(outStream);
     }
 }
+#endif
 
 internal static class   
 Compressing {
-    #if DEBUG
+    #if OS_WINDOWS
     public const CompressMethods DefaultCompressMethod = CompressMethods.Xz;
     #else
-    public const CompressMethods DefaultCompressMethod = CompressMethods.Xz;
+    public const CompressMethods DefaultCompressMethod = CompressMethods.Gzip;
     #endif
     public static readonly string DefaultCompressMethodFileExtension = DefaultCompressMethod.GetEnumAttribute<FileExtensionAttribute>().Value;
 
@@ -97,8 +101,15 @@ Compressing {
     }
 
     private static ICompress
-    ResolveCompressor(this CompressMethods m) => 
-        m == CompressMethods.Gzip ? (ICompress) new GZipCompress() : (m == CompressMethods.Xz? new XzCompress() : throw new NotImplementedException());
+    ResolveCompressor(this CompressMethods m) {
+        return m switch {
+            CompressMethods.Gzip => new GZipCompress(),
+            #if OS_WINDOWS
+            CompressMethods.Xz => new XzCompress(),
+            #endif
+            _ => throw new NotImplementedException()
+        };
+    }
 
     public static byte[]
     Compress(this byte[] bytes, CompressMethods method = DefaultCompressMethod) => 

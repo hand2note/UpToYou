@@ -79,7 +79,7 @@ public static class HostHelper {
     DownloadHostedFile(this PackageProjectionFile packageProjectionFile, string outDirectory, IHostClient client) =>
         packageProjectionFile.SubUrl.DownloadFile(client, outDirectory);
 
-    internal static string
+    public static string
     DownloadFile(this RelativePath path,  IHostClient client, string outDirectory) {
         var outFile =  path.ToAbsolute(outDirectory).CreateParentDirectoryIfAbsent();
         using var fileStream = File.Create(outFile);
