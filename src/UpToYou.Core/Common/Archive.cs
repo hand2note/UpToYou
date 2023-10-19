@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using ICSharpCode.SharpZipLib.Tar;
 
-namespace UpToYou.Core {
+namespace UpToYou.Core;
 
 internal static class Archive {
 
@@ -57,19 +58,9 @@ internal static class Archive {
     }
 
     public static string
-    ExtractArchive(this string path, string outDir) {
-        using var fs = path.VerifyFileExistence().OpenFileForRead();
-        using var tar = TarArchive.CreateInputTarArchive(fs);
-        tar.ExtractContents(outDir.CreateDirectoryIfAbsent());
-        return outDir;
-    }
-
-    public static string
     ExtractArchive(this Stream inStream, string outDir) {
-        using var tar = TarArchive.CreateInputTarArchive(inStream);
+        using var tar = TarArchive.CreateInputTarArchive(inputStream: inStream, nameEncoding: Encoding.UTF8);
         tar.ExtractContents(outDir.CreateDirectoryIfAbsent());
         return outDir;
     }
-
-}
 }
