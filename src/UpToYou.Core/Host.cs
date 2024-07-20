@@ -22,6 +22,14 @@ NullProgress : IProgress<long> {
 }
 
 public class 
+DownloadProgressObserver: IProgress<long> {
+    public Action<long> OnDownloadProgress { get; }
+    public DownloadProgressObserver(Action<long> onDownloadProgress) => OnDownloadProgress = onDownloadProgress;
+
+    public void Report(long value) => OnDownloadProgress(value);
+}
+
+public class 
 HttpHostClient: IHostClient, IDisposable {
     public string BaseUri {get;}
     public HttpClient HttpClient {get;}
