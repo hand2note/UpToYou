@@ -38,7 +38,10 @@ DownloadHelper {
         var attempt = 0;
         while (attempt < attempts) {
             try {
-                return httpClient.GetAsync(requestUri: requestUri, cancellationToken: cancellationToken);
+                return httpClient.GetAsync(
+                    requestUri: requestUri,
+                    completionOption: HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken: cancellationToken);
             }
             catch {
                 Task.Delay(200).Wait();
@@ -67,7 +70,7 @@ DownloadHelper {
         while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0) {
             await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
             totalBytesRead += bytesRead;
-            progress?.Report(totalBytesRead);
+            progress?.Report(bytesRead);
         }
     }
     
