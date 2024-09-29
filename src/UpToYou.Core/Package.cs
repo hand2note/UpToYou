@@ -84,7 +84,7 @@ PackageHeader: IHasCustomProperties{
 
     public bool 
     IsSamePackage(Version version, string? name) =>
-        Version == version && (string.IsNullOrWhiteSpace(Name) ? string.IsNullOrWhiteSpace(name) :  Name == name);
+        Version.VersionEquals(version) && (string.IsNullOrWhiteSpace(Name) ? string.IsNullOrWhiteSpace(name) :  Name == name);
 
     public override string ToString() => $"{Name}, {Version}";
 }

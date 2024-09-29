@@ -43,7 +43,7 @@ UpdateNotes {
     public bool 
     Hits(string packageName, Version version) =>
         (string.IsNullOrWhiteSpace(packageName) ? string.IsNullOrWhiteSpace(PackageName) : PackageName == packageName ) &&
-        Version == version;
+        Version.VersionEquals(version);
 }
 
 public static class 
@@ -77,7 +77,7 @@ UpdateNotesHelper {
 
     public static string? 
     FindNotes(this IEnumerable<(Version version, string notes)> updateNotes, Version version) => 
-        updateNotes.TryGet(x => x.version == version, out var res) ? res.notes : null;
+        updateNotes.TryGet(x => x.version.VersionEquals(version), out var res) ? res.notes : null;
 
     private static (Version version, string notes) 
     ParsePackageUpdateNotes(this string text) {

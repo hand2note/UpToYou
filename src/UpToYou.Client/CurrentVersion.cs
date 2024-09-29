@@ -11,10 +11,7 @@ namespace UpToYou.Client
             var actualFile = header.VersionProviderFile.Path.ToAbsolute(programDirectory);
             var versionProvider = header.VersionProviderFile;
             return actualFile.FileExists() && 
-                   //versionProvider.FileSize == actualFile.GetFileSize() &&
-                    //Treat package as installed if versions are equal
-                   (versionProvider.FileVersion == null || versionProvider.FileVersion == actualFile.GetFileVersion());//  && 
-                   //actualFile.GetFileHash() == versionProvider.FileHash;
+                (versionProvider.FileVersion == null || versionProvider.FileVersion.VersionEquals(actualFile.GetFileVersion()));
         }
 
         public static Version? 

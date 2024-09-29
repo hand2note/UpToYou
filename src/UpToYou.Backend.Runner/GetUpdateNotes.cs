@@ -57,7 +57,7 @@ public static class GetUpdateNotesModule {
         var filesHost = options.GetFilesHost();
         var version = options.Version.ParseVersion();
         var updateNotes = filesHost.DownloadUpdateNotes(options.PackageName, options.Locale).ParseUpdateNotes();
-        return updateNotes.TryGet(x => x.version == version, out var res) ? res.notes : null;
+        return updateNotes.TryGet(x => x.version.VersionEquals(version), out var res) ? res.notes : null;
     } 
 
 }
