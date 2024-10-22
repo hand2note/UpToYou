@@ -16,7 +16,7 @@ $args = "RemovePackage " +
 " --AzureConnectionString $AzureConnectionString" + 
 " --AzureRootContainer $AzureRootContainer"
 
-$upToYouExe = "$PSScriptRoot/../src\\UpToYou.Backend.Runner\\bin\\Debug\\net5.0\\publish\\UpToYou.exe"
+$upToYouExe = "$PSScriptRoot/../src\\UpToYou.Backend.Runner\\bin\\Debug\\net7.0\\publish\\UpToYou.exe"
 Remove-Item -Path "out.txt" -ErrorAction Ignore
 Remove-Item -Path "error.txt" -ErrorAction Ignore
 Start-Process -FilePath  $upToYouExe -ArgumentList $args -Wait -NoNewWindow -RedirectStandardOutput "out.txt" -RedirectStandardError "error.txt"
