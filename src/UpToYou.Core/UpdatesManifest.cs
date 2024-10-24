@@ -18,6 +18,7 @@ UpdatesManifest {
 
     public IEnumerable<PackageHeader> Packages => PackagesByDate;
     protected UpdatesManifest() => PackagesByDate = ImmutableList<PackageHeader>.Empty;
+    public bool IsEmpty => PackagesByDate.Count == 0;
     
     public PackageHeader
     GetPackageHeader(string packageId) => 
