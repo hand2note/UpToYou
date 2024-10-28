@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace UpToYou.Core {
+namespace UpToYou.Core;
 
 internal static class
 Files {
@@ -140,7 +140,11 @@ Files {
     MoveDirectory(this string src, string dest) { Directory.Move(src, dest); return dest;}
 
     public static IEnumerable<string>
-    GetAllDirectoryFiles(this string dir, bool recursive = true) => Directory.EnumerateFiles(dir.VerifyDirectoryExistence(), "*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+    GetAllDirectoryFiles(this string directory, bool recursive = true) {
+        if (!directory.DirectoryExists())
+            return Enumerable.Empty<string>();
+        return Directory.EnumerateFiles(directory.VerifyDirectoryExistence(), "*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);  
+    } 
 
     public static IEnumerable<string>
     EnumerateChildDirectories(this string dir, bool recursive = false) => Directory.GetDirectories(dir, "*", recursive? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
@@ -202,5 +206,4 @@ Files {
         }
         return dest;
     }
-}
 }
