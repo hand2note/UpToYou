@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Resources;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Updater {
@@ -28,6 +29,9 @@ namespace Updater {
         static void Main(string[] args) {
             Console.WriteLine("Begin the installation of the update");
             Console.WriteLine("Args:");
+            #if DEBUG
+            Debugger.Launch();
+            #endif
             foreach (var arg in args) Console.WriteLine(arg);
             Task.Delay(1000).Wait();
             try {
@@ -44,7 +48,9 @@ namespace Updater {
                     Console.ReadKey();
                 }
             }
-               
+            #if DEBUG 
+            Console.ReadKey();
+            #endif
         }
 
         static void Install(Options options) {
@@ -53,18 +59,29 @@ namespace Updater {
 
             WaitForProcessesToExit(options);
             foreach (var updateFile in Directory.GetFiles(options.UpdateFilesDirectory, "*", SearchOption.AllDirectories)) {
-                var actualFile = GetActualFilePath(updateFile, options);
-                actualFile.BackupFile(options);
-                if (!File.Exists(actualFile)) {
-                    File.Copy(updateFile, actualFile);
-                    Console.WriteLine($"Added new file {actualFile}");
+                int trials = 1;
+                while(trials < 10) {
+                    try {
+                        var actualFile = GetActualFilePath(updateFile, options);
+                        actualFile.BackupFile(options);
+                        if (!File.Exists(actualFile)) {
+                            File.Copy(updateFile, actualFile);
+                            Console.WriteLine($"Added new file {actualFile}");
+                        }
+                        else if (!AreSameFiles(updateFile, actualFile)) {
+                            File.Copy(updateFile, actualFile, overwrite: true);
+                            Console.WriteLine($"Updated file {actualFile}");
+                        }
+                        else
+                            Console.WriteLine("Skipped file because its updated version is the same as actual one: " + actualFile);
+                        break;
+                    }
+                    catch(Exception exception) {
+                        Console.WriteLine(exception);
+                        Thread.Sleep(1000);
+                        trials++;
+                    }
                 }
-                else if (!AreSameFiles(updateFile, actualFile)) {
-                    File.Copy(updateFile, actualFile, overwrite: true);
-                    Console.WriteLine($"Updated file {actualFile}");
-                }
-                else
-                    Console.WriteLine("Skipped file because its updated version is the same as actual one: " + actualFile);
             }
 
             Console.WriteLine("The update has been successfully installed");
