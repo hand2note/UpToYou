@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace UpToYou.Core {
 public static class HostHelper {
 
     internal static RelativePath UpdatesManifestPathOnHost => ".updates.proto.xz".ToRelativePath();
+    internal static RelativePath NewsPathOnHost => ".news.json.zip".ToRelativePath();
     internal static string AllPackagesGlobPattern => $"packages\\*.package*";
     internal static string AllProjectionsGlobalPattern => $"projections\\*.projection*";
 
@@ -107,5 +109,11 @@ public static class HostHelper {
             .DownloadBytes(client)
             .Decompress()
             .DeserializeProto<UpdatesManifest>();
+    
+    public static string
+    DownloadNews(this IHostClient client) =>
+        NewsPathOnHost
+        .DownloadBytes(client)
+        .Decompress().ToUtf8String();
 }
 }
