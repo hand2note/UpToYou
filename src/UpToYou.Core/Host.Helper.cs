@@ -11,7 +11,6 @@ namespace UpToYou.Core {
 public static class HostHelper {
 
     internal static RelativePath UpdatesManifestPathOnHost => ".updates.proto.xz".ToRelativePath();
-    internal static RelativePath NewsPathOnHost => ".news.json.zip".ToRelativePath();
     internal static string AllPackagesGlobPattern => $"packages\\*.package*";
     internal static string AllProjectionsGlobalPattern => $"projections\\*.projection*";
 
@@ -88,7 +87,11 @@ public static class HostHelper {
         client.DownloadFile(path, fileStream);
         return outFile;
     }
-
+    
+    public static string
+    DownloadFile(this string path, IHostClient client, string outDirectory) =>
+        path.ToRelativePath().DownloadFile(client, outDirectory);
+    
     internal static byte[] 
     DownloadBytes(this RelativePath path, IHostClient client) => client.DownloadBytes(path);
     
@@ -110,10 +113,5 @@ public static class HostHelper {
             .Decompress()
             .DeserializeProto<UpdatesManifest>();
     
-    public static string
-    DownloadNews(this IHostClient client) =>
-        NewsPathOnHost
-        .DownloadBytes(client)
-        .Decompress().ToUtf8String();
 }
 }
