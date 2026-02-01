@@ -13,6 +13,14 @@ IFilesHostOptions {
     string? LocalHostRootPath {get; }
 }
 
+public class 
+UploadFileOptions : IFilesHostOptions{
+    public string? AzureConnectionString { get; set;}
+    public string? AzureRootContainer { get; set;}
+    public string? FilesHostType { get; set;}
+    public string? LocalHostRootPath { get; set;}
+}
+
 public static class FileHostOptionsEx {
 
     public static AzureBlobStorageOptions 
