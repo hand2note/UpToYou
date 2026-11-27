@@ -23,32 +23,44 @@ DownloadHelper {
 
     public static async Task
     DownloadAsync(this HttpClient client, string uri, IProgress<long> progress, CancellationToken cancellationToken, Stream outStream) {
-        var response = await client.GetAsyncWithAttempts(uri, cancellationToken).ConfigureAwait(false);
-        using var stream =  await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var response = await client.GetAsyncWithAttempts(
+            requestUri: uri,
+            cancellationToken: cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+        response.EnsureSuccessStatusCode();
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
         await stream.CopyToAsync(
             destination: outStream,
-            progress, 
-            cancellationToken,
-            bufferSize: 8192);
+            progress: progress,
+            cancellationToken: cancellationToken,
+            bufferSize: 8192).ConfigureAwait(continueOnCapturedContext: false);
     }
 
-    public static Task<HttpResponseMessage>
-    GetAsyncWithAttempts(this HttpClient httpClient, string requestUri, CancellationToken cancellationToken) {
-        var attempts = 100;
+    public static async Task<HttpResponseMessage>
+    GetAsyncWithAttempts(
+        this HttpClient httpClient,
+        string requestUri,
+        CancellationToken cancellationToken) {
+        //Edited by Gemini 4 Neon (https://github.com/hand2note/Hand2Note4.1.Issues/issues/3101): Await GetAsync so transient transport errors are retried without blocking or swallowing the final exception.
+        const int maxAttempts = 5;
+        const int retryDelayMs = 200;
         var attempt = 0;
-        while (attempt < attempts) {
+        while (true) {
             try {
-                return httpClient.GetAsync(
+                return await httpClient.GetAsync(
                     requestUri: requestUri,
                     completionOption: HttpCompletionOption.ResponseHeadersRead,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
             }
-            catch {
-                Task.Delay(200).Wait();
+            catch (Exception exception) when (
+                exception is HttpRequestException or IOException or TaskCanceledException &&
+                !cancellationToken.IsCancellationRequested &&
+                attempt + 1 < maxAttempts) {
+                await Task.Delay(
+                    millisecondsDelay: retryDelayMs,
+                    cancellationToken: cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
                 attempt++;
             }
         }
-        throw new Exception("Please check your internet connection and try again");
     }
     
     public static async Task 
